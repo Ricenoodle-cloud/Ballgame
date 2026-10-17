@@ -1,0 +1,12 @@
+node_modules/
+dist/
+work/
+*.tsbuildinfo
+dist-offline/
+output/
+.vercel/
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
