@@ -1280,3 +1280,35 @@ kbd {
     top: 16px;
   }
 }
+
+
+/* V2 arcade HUD */
+.is-game .scoreboard {
+  position: absolute; top: 62px; left: 50%; right: auto;
+  transform: translateX(-50%); width: clamp(220px, 24vw, 330px);
+  padding: 14px 20px; border-radius: 20px;
+  background: rgba(10, 28, 58, .9); border: 1px solid #67baff80;
+  box-shadow: 0 8px 30px #0007, 0 0 24px #399bff25;
+  pointer-events: none;
+}
+.is-game .scoreboard b { font-size: 42px; color: #ffe4a0; }
+.is-game .scoreboard small { font-size: 19px; }
+.is-game .scoreboard > div > span { color: #d3e9ff; font-size: 12px; }
+.feedback-score .score-pop { animation: reward-pop .45s ease-out; }
+.feedback-wrong { animation: penalty-flash .5s ease-out; }
+.feedback-wrong .score-pop { color: #ff607d; animation: penalty-shake .4s; }
+.volume-slider { width: 64px; accent-color: #69cfff; }
+@keyframes reward-pop { 40% { transform: scale(1.16); color: #96ffcd; text-shadow: 0 0 18px #80ffb8; } }
+@keyframes penalty-shake { 20%, 60% { transform: translateX(-4px); } 40%, 80% { transform: translateX(4px); } }
+@keyframes penalty-flash { 30% { background: #761c39; border-color: #ff4b6b; } }
+@media (max-width: 800px), (max-height: 650px) {
+  .is-game .scoreboard { top: 52px; width: 230px; padding: 8px 14px; }
+  .is-game .scoreboard b { font-size: 30px; }
+}
+.is-game .scoreboard p { font-size: 10px; color: #a8c6e9; }
+@media (max-height: 800px) {
+  .is-game .scoreboard { top: 45px; width: 240px; padding: 8px 14px; }
+  .is-game .scoreboard b { font-size: 28px; }
+  .is-game .scoreboard .progress-track { margin-top: 8px; }
+  .is-game .scoreboard p { margin-top: 5px; }
+}

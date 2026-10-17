@@ -1,9 +1,11 @@
+import { audio } from "./audio";
 import { useEffect } from "react";
 import { useGame } from "./store";
 export const input = { keys: new Set<string>(), dash: false };
 export function useInput() {
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
+      audio.unlock();
       if (
         [
           "KeyW",

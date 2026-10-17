@@ -24,7 +24,7 @@ function ball(
   y: number,
   z: number,
   mass: number,
-  damping = 0.65,
+  damping = CONFIG.targetDamping,
 ) {
   const rb = world.createRigidBody(
     RAPIER.RigidBodyDesc.dynamic()
@@ -44,7 +44,7 @@ function ball(
 test("actual extruded arena supports a ball, and all four circular openings allow gravity falls", () => {
   const w = arena();
   const safe = ball(w, 0, 1, 0, 1);
-  const holes = HOLES.map((h) => ball(w, h.x, 1, h.z, 3.5));
+  const holes = HOLES.map((h) => ball(w, h.x, 1, h.z, CONFIG.targetMass));
   for (let i = 0; i < 180; i++) w.step();
   assert.ok(safe.translation().y > 0.42 && safe.translation().y < 0.49);
   for (const b of holes)
@@ -57,7 +57,7 @@ test("actual extruded arena supports a ball, and all four circular openings allo
 test("sustained player impulse moves a heavy ball without teleportation", () => {
   const w = arena();
   const p = ball(w, 0, 0.46, 0, 1, 2.1);
-  const target = ball(w, 1, 0.46, 0, 3.5);
+  const target = ball(w, 1, 0.46, 0, CONFIG.targetMass);
   for (let i = 0; i < 240; i++) {
     p.applyImpulse({ x: CONFIG.force * CONFIG.step, y: 0, z: 0 }, true);
     w.step();
@@ -72,8 +72,8 @@ test("sustained player impulse moves a heavy ball without teleportation", () => 
 test("dash transfers real momentum through a chain of heavy balls with CCD", () => {
   const w = arena();
   const p = ball(w, -1.2, 0.46, 0, 1, 2.1);
-  const a = ball(w, 0, 0.46, 0, 3.5);
-  const b = ball(w, 1, 0.46, 0, 3.5);
+  const a = ball(w, 0, 0.46, 0, CONFIG.targetMass);
+  const b = ball(w, 1, 0.46, 0, CONFIG.targetMass);
   p.applyImpulse({ x: CONFIG.dashImpulse, y: 0, z: 0 }, true);
   let peak = 0;
   for (let i = 0; i < 100; i++) {

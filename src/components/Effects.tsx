@@ -6,9 +6,10 @@ import { useGame, type Effect } from "../game/store";
 function Burst({ effect }: { effect: Effect }) {
   const group = useRef<THREE.Group>(null);
   const age = useRef(0);
+  const cleaned = useRef(false);
   const particles = useMemo(
     () =>
-      Array.from({ length: effect.kind === "score" ? 18 : 8 }, (_, i) => {
+      Array.from({ length: effect.kind === "explosion" ? 32 : effect.kind === "score" ? 18 : 8 }, (_, i) => {
         const angle = i * 2.399;
         return new THREE.Vector3(
           Math.cos(angle) * (1 + (i % 3) * 0.4),
@@ -21,6 +22,10 @@ function Burst({ effect }: { effect: Effect }) {
   useFrame((_, dt) => {
     if (useGame.getState().status === "paused") return;
     age.current += dt;
+    if (age.current > 1.5 && !cleaned.current && effect.id !== 999) {
+      cleaned.current = true;
+      useGame.setState(s => ({ effects: s.effects.filter(e => e.id !== effect.id) }));
+    }
     if (!group.current) return;
     group.current.visible = age.current < 1.4;
     group.current.children.forEach((child, i) => {
@@ -40,11 +45,13 @@ function Burst({ effect }: { effect: Effect }) {
           <meshBasicMaterial color={effect.color} />
         </mesh>
       ))}
+      {effect.kind === "explosion" && <Shockwave />}
+      {effect.kind === "wrong" && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02 - effect.y, 0]}><ringGeometry args={[1.05, 1.28, 40]} /><meshBasicMaterial color="#ff244c" transparent opacity={0.8} /></mesh>}
       {effect.text && (
         <Html center position={[0, 1.2, 0]}>
           <span
             className={`score-float ${effect.kind === "wrong" ? "wrong" : ""}`}
-            style={{ color: effect.color }}
+            style={{ color: effect.kind === "score" ? "#bcffb5" : effect.color }}
           >
             {effect.text}
           </span>
@@ -76,4 +83,18 @@ export function Effects() {
       )}
     </>
   );
+}
+
+
+function Shockwave() {
+  const ref = useRef<THREE.Mesh>(null);
+  const age = useRef(0);
+  useFrame((_, dt) => {
+    if (useGame.getState().status === "paused") return;
+    age.current += dt;
+    if (!ref.current) return;
+    ref.current.scale.setScalar(age.current * 5);
+    (ref.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.8 - age.current);
+  });
+  return <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.8, 1, 40]} /><meshBasicMaterial color="#ffb14e" transparent opacity={0.8} depthWrite={false} /></mesh>;
 }

@@ -14,7 +14,9 @@ export const COLOR_NAMES: Record<ColorKey, string> = {
 export const CONFIG = {
   radius: 0.45,
   playerMass: 1,
-  targetMass: 3.5,
+  targetMass: 1.7,
+  targetDamping: 0.35,
+  targetAngularDamping: 0.5,
   force: 15,
   maxSpeed: 4.8,
   dashImpulse: 10.5,
@@ -26,8 +28,13 @@ export const CONFIG = {
   width: 18,
   depth: 14,
   holeRadius: 1.05,
-  spawnInitial: 3,
-  spawnMinimum: 0.8,
+  spawnInitial: 4,
+  spawnMinimum: 1.5,
+  bombWarning: 1.5,
+  bombRadius: 0.56,
+  blastRadius: 2.4,
+  blastImpulse: 4.5,
+  maxBombs: 5,
   maxBalls: 40,
 };
 export const HOLES: { id: string; color: ColorKey; x: number; z: number }[] = [
@@ -47,9 +54,9 @@ export const LEVELS = [
   {
     id: 2,
     name: "天上来敌",
-    en: "COLOR RAIN",
+    en: "BOMB ALERT",
     goal: 20,
-    description: "彩球从天而降，在混乱中找到你的节奏。",
+    description: "躲避空袭，把混合彩球推入同色洞口。",
   },
 ];
 export type BallData = {
@@ -58,19 +65,32 @@ export type BallData = {
   position: [number, number, number];
   spawned?: boolean;
 };
-export function initialBalls(): BallData[] {
-  return HOLES.flatMap((h, c) =>
-    [
-      [h.x * 0.69, h.z * 0.68],
-      [h.x * 0.4, h.z * 0.84],
-      [h.x * 0.78, h.z * 0.28],
-      [h.x * 0.4, h.z * 0.33],
-    ].map(([x, z], i) => ({
-      id: `initial-${c}-${i}`,
-      color: h.color,
-      position: [x, 0.5, z],
-    })),
-  );
+// Each quadrant receives every color, with constrained random positions.
+export function initialBalls(count = 16, random = Math.random): BallData[] {
+  const balls: BallData[] = [];
+  const colors = Object.keys(COLORS) as ColorKey[];
+  for (let q = 0; q < 4; q++) {
+    const palette = Array.from({ length: count / 4 }, (_, i) => colors[i % 4]);
+    for (let i = palette.length - 1; i > 0; i--) {
+      const j = Math.floor(random() * (i + 1));
+      [palette[i], palette[j]] = [palette[j], palette[i]];
+    }
+    for (let i = 0; i < palette.length; i++) {
+      let position: [number, number, number] | undefined;
+      for (let attempt = 0; attempt < 5000; attempt++) {
+        const x = (0.55 + random() * 7.55) * (q % 2 ? 1 : -1);
+        const z = (0.55 + random() * 5.55) * (q < 2 ? -1 : 1);
+        if (Math.hypot(x, z - 1.4) < 1.65 ||
+            HOLES.some(h => Math.hypot(h.x - x, h.z - z) < 2) ||
+            balls.some(b => Math.hypot(b.position[0] - x, b.position[2] - z) < 1.15)) continue;
+        position = [x, 0.5, z];
+        break;
+      }
+      if (!position) throw new Error("Unable to sample safe target positions");
+      balls.push({ id: `initial-${q}-${i}`, color: palette[i], position });
+    }
+  }
+  return balls;
 }
 export function randomBall(id: string): BallData {
   let x = 0,

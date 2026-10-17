@@ -15,6 +15,7 @@ import {
   Zap,
   Keyboard,
   VolumeX,
+  Volume2,
   Orbit,
   Home,
   X,
@@ -24,6 +25,7 @@ import {
 import { Game } from "./components/Game";
 import { useGame } from "./game/store";
 import { COLORS, COLOR_NAMES, CONFIG, LEVELS } from "./game/config";
+import { audio } from "./game/audio";
 import { input } from "./game/input";
 class SceneBoundary extends Component<
   { children: ReactNode },
@@ -44,6 +46,9 @@ class SceneBoundary extends Component<
   }
 }
 function App() {
+  const feedback = useGame(s => s.feedback);
+  const [sound, setSound] = useState(audio.enabled);
+  const [volume, setVolume] = useState(audio.volume);
   const status = useGame((s) => s.status);
   const level = useGame((s) => s.level);
   const score = useGame((s) => s.score);
@@ -63,7 +68,7 @@ function App() {
     .toString()
     .padStart(2, "0")}`;
   return (
-    <main className={menu ? "app is-menu" : "app is-game"}>
+    <main className={menu ? "app is-menu" : "app is-game"} onPointerDown={() => audio.unlock()}>
       <header className="topbar">
         <a
           className="brand"
@@ -98,9 +103,10 @@ function App() {
           >
             <HelpCircle size={19} />
           </button>
-          <span className="sound-icon" title="沉浸式静音体验">
-            <VolumeX size={18} />
-          </span>
+          <button className="icon-button" aria-label={sound ? "关闭音效" : "开启音效"} onClick={() => { audio.enabled = !sound; setSound(!sound); audio.unlock(); }}>
+            {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
+          </button>
+          <input className="volume-slider" aria-label="音效音量" type="range" min="0" max="1" step="0.05" value={volume} onChange={e => { const v = Number(e.target.value); audio.volume = v; setVolume(v); }} />
         </div>
       </header>
       <div className="ambient ambient-one" />
@@ -187,7 +193,7 @@ function App() {
                         <p>
                           {i === 1 && !unlocked
                             ? "完成静态推球后解锁"
-                            : `目标 ${l.goal} 分 · ${i === 0 ? "16 颗彩球" : "持续掉落"}`}
+                            : `目标 ${l.goal} 分 · ${i === 0 ? "16 颗彩球" : "32 颗彩球 · 炸弹空袭"}`}
                         </p>
                       </div>
                       {i === 1 && !unlocked ? (
@@ -247,9 +253,9 @@ function App() {
           )}
         </div>
         {!menu && (
-          <div className="scoreboard">
+          <div key={feedback.id} className={`scoreboard feedback-${feedback.kind}`}>
             <div>
-              <span>本局得分</span>
+              <span>第 {level} 关 · {data.name}</span>
               <b key={score} className="score-pop">
                 {score}
                 <small>/ {data.goal}</small>
@@ -263,7 +269,7 @@ function App() {
               />
             </div>
             <p>
-              {data.en}
+              {feedback.text || data.en}
               <span>{Math.round((score / data.goal) * 100)}%</span>
             </p>
           </div>
@@ -296,7 +302,7 @@ function App() {
             <i /> {menu ? "真实 3D 刚体模拟" : `${balls} 颗彩球在场`}
           </span>
           <span>
-            {menu ? "每一次碰撞，都有可能。" : "同色入洞 +1 · 小心别掉下去"}
+            {menu ? "每一次碰撞，都有可能。" : "同色 +1 · 错色 -1 · 小心洞口"}
           </span>
         </div>
         {["paused", "failed", "victory"].includes(status) && (
@@ -499,7 +505,7 @@ function Instructions() {
         <span>01</span>
         <p>
           <b>WASD / 方向键 · 滚动</b>
-          持续施加推力。松开按键后自然减速，重球需要一点耐心。
+          持续施加推力。松开按键后自然减速，普通彩球更易推动，多个球仍有阻力。
         </p>
       </div>
       <div>
@@ -513,14 +519,14 @@ function Instructions() {
         <span>03</span>
         <p>
           <b>同色入洞 · +1 分</b>
-          连锁撞击同样计分。错色球会消失，自己的球掉入洞口则失败。
+          连锁撞击同样计分。错色入洞 -1，自己的球掉入洞口则失败。
         </p>
       </div>
       <div>
         <span>04</span>
         <p>
           <b>10 分通关 · 解锁下一关</b>
-          第一关彩球有限，失误过多需重试；第二关持续掉球，目标 20 分。Esc 暂停。
+          第一关彩球有限，失误过多需重试；第二关躲避炸弹，命中 -1，目标 20 分。Esc 暂停。
         </p>
       </div>
     </div>
