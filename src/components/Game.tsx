@@ -4,8 +4,9 @@ import { Physics } from "@react-three/rapier";
 import { Stars } from "@react-three/drei";
 import { Arena } from "./Arena";
 import { Bodies, PlayerBall, TargetBall } from "./Balls";
+import { Bombs } from "./Bombs";
 import { Effects } from "./Effects";
-import { CONFIG, holeAt, randomBall } from "../game/config";
+import { CONFIG, holeAt } from "../game/config";
 import { useGame, type Resolution } from "../game/store";
 import { useInput } from "../game/input";
 import * as THREE from "three";
@@ -16,10 +17,9 @@ function Systems() {
   }
   const balls = useGame((s) => s.balls);
   const status = useGame((s) => s.status);
-  const nextSpawn = useRef(3);
-  const counter = useRef(0);
   const falling = useRef(0);
   const processed = useRef(new Set<string>());
+  const entered = useRef(new Map<string, NonNullable<ReturnType<typeof holeAt>>>());
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const s = useGame.getState();
@@ -40,29 +40,18 @@ function Systems() {
     registry.targets.forEach((rb, id) => {
       if (processed.current.has(id)) return;
       const t = rb.translation();
+      if (t.y < 0 && !entered.current.has(id)) {
+        const hole = holeAt(t.x, t.z);
+        if (hole) entered.current.set(id, hole);
+      }
       if (t.y < -0.7) {
         processed.current.add(id);
-        const h = holeAt(t.x, t.z);
+        const h = entered.current.get(id) ?? holeAt(t.x, t.z);
         rows.push({ id, holeColor: h?.color, x: h?.x ?? t.x, z: h?.z ?? t.z });
       }
     });
     if (rows.length) s.resolve(rows);
-    const latest = useGame.getState();
-    if (
-      latest.level === 2 &&
-      latest.status === "playing" &&
-      latest.elapsed >= nextSpawn.current
-    ) {
-      if (latest.balls.length < CONFIG.maxBalls) {
-        latest.spawn(randomBall(`rain-${++counter.current}`));
-        nextSpawn.current =
-          latest.elapsed +
-          Math.max(
-            CONFIG.spawnMinimum,
-            CONFIG.spawnInitial - latest.elapsed * 0.018,
-          );
-      } else nextSpawn.current = latest.elapsed + 0.25;
-    }
+
   });
   return (
     <Bodies.Provider value={registry}>
@@ -74,6 +63,7 @@ function Systems() {
       >
         <Arena />
         <PlayerBall />
+        <Bombs />
         {balls.map((b) => (
           <TargetBall key={b.id} data={b} />
         ))}

@@ -89,20 +89,24 @@ export function PlayerBall() {
         s.elapsed - dashAt.current < 0.25
           ? 2
           : 0.18 + Math.sin(s.elapsed * 2) * 0.08;
+    if (s.status !== "playing") { trailPoints.current = []; }
+    const speed = Math.hypot(rb.linvel().x, rb.linvel().z);
+    const dash = s.elapsed - dashAt.current < 0.45;
     if (s.status === "playing") {
       tick.current += dt;
       if (tick.current > 0.035) {
         tick.current = 0;
         const p = rb.translation();
-        trailPoints.current.unshift(new THREE.Vector3(p.x, p.y, p.z));
-        trailPoints.current = trailPoints.current.slice(0, 10);
+        if (speed > 0.15) trailPoints.current.unshift(new THREE.Vector3(p.x, p.y, p.z));
+        else trailPoints.current.pop();
+        trailPoints.current = trailPoints.current.slice(0, 24);
       }
     }
     trail.current?.children.forEach((c, i) => {
       const p = trailPoints.current[i];
-      c.visible = !!p && s.elapsed - dashAt.current < 0.45;
+      c.visible = !!p && i > 0 && i < (dash ? 24 : Math.max(2, speed * 2.5));
       if (p) c.position.copy(p);
-      c.scale.setScalar((1 - i / 10) * 0.22);
+      c.scale.setScalar((1 - i / 24) * (dash ? 0.22 : 0.13));
     });
   });
   return (
@@ -149,13 +153,13 @@ export function PlayerBall() {
         </mesh>
       </RigidBody>
       <group ref={trail}>
-        {Array.from({ length: 10 }, (_, i) => (
+        {Array.from({ length: 24 }, (_, i) => (
           <mesh key={i} visible={false}>
             <sphereGeometry args={[1, 8, 8]} />
             <meshBasicMaterial
               color="#90dcff"
               transparent
-              opacity={0.26 * (1 - i / 10)}
+              opacity={0.36 * (1 - i / 24)}
             />
           </mesh>
         ))}
@@ -179,8 +183,8 @@ export function TargetBall({ data }: { data: BallData }) {
         ref={ref}
         colliders={false}
         position={data.position}
-        linearDamping={0.65}
-        angularDamping={0.8}
+        linearDamping={CONFIG.targetDamping}
+        angularDamping={CONFIG.targetAngularDamping}
         ccd
         onContactForce={(e) => {
           const s = useGame.getState();
