@@ -1,4 +1,4 @@
-import { Component, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -14,7 +14,7 @@ import {
   Target,
   Zap,
   Keyboard,
-  VolumeX,
+  Volume2,
   Orbit,
   Home,
   X,
@@ -24,6 +24,7 @@ import {
 import { Game } from "./components/Game";
 import { useGame } from "./game/store";
 import { COLORS, COLOR_NAMES, CONFIG, LEVELS } from "./game/config";
+import { audio } from "./game/audio";
 import { input } from "./game/input";
 class SceneBoundary extends Component<
   { children: ReactNode },
@@ -44,8 +45,18 @@ class SceneBoundary extends Component<
   }
 }
 function App() {
+  const feedback = useGame(s => s.feedback);
+  const [audioSettings, setAudioSettings] = useState(audio.settings);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const updateAudio = (patch: Partial<typeof audioSettings>) => { audio.configure(patch); setAudioSettings({...audio.settings}); };
   const status = useGame((s) => s.status);
   const level = useGame((s) => s.level);
+  useEffect(() => {
+    audio.setScene(level, status);
+    if (status === "victory") audio.play("victory");
+    if (status === "failed") audio.play("failed");
+    if (import.meta.env.DEV) Object.assign(window, { __orbitAudio: audio });
+  }, [status, level]);
   const score = useGame((s) => s.score);
   const unlocked = useGame((s) => s.unlocked);
   const elapsed = useGame((s) => s.elapsed);
@@ -63,7 +74,7 @@ function App() {
     .toString()
     .padStart(2, "0")}`;
   return (
-    <main className={menu ? "app is-menu" : "app is-game"}>
+    <main className={menu ? "app is-menu" : "app is-game"} onPointerDown={() => audio.unlock()}>
       <header className="topbar">
         <a
           className="brand"
@@ -78,13 +89,13 @@ function App() {
             <Orbit size={25} />
           </span>
           <span>
-            ORBIT<span className="brand-light"> BALL</span>
+            AURELIA<span className="brand-light"> ORBIT</span>
             <small>推小球闯关</small>
           </span>
         </a>
         <div className="top-nav">
           <span className="edition">
-            PHYSICS PLAYGROUND <i /> VOL. 01
+            DREAM GEOMETRY <i /> VOL. 03
           </span>
           <button
             className="icon-button"
@@ -98,9 +109,15 @@ function App() {
           >
             <HelpCircle size={19} />
           </button>
-          <span className="sound-icon" title="沉浸式静音体验">
-            <VolumeX size={18} />
-          </span>
+          <button className="icon-button" aria-label="音频设置" aria-expanded={audioOpen} onClick={() => setAudioOpen(!audioOpen)}><Volume2 size={18} /></button>
+          {audioOpen && <section className="audio-panel" aria-label="音频设置面板">
+            <h3>声音花园 <small>SOUND GARDEN</small></h3>
+            <label><span>背景音乐</span><input aria-label="背景音乐开关" type="checkbox" checked={audioSettings.musicEnabled} onChange={e=>updateAudio({musicEnabled:e.target.checked})} /></label>
+            <label><span>音乐音量</span><input aria-label="背景音乐音量" type="range" min="0" max="1" step="0.01" value={audioSettings.musicVolume} onChange={e=>updateAudio({musicVolume:Number(e.target.value)})} /></label>
+            <label><span>游戏音效</span><input aria-label="音效开关" type="checkbox" checked={audioSettings.sfxEnabled} onChange={e=>updateAudio({sfxEnabled:e.target.checked})} /></label>
+            <label><span>音效音量</span><input aria-label="音效音量" type="range" min="0" max="1" step="0.01" value={audioSettings.sfxVolume} onChange={e=>updateAudio({sfxVolume:Number(e.target.value)})} /></label>
+            <p>原创旋律 · 在第一次点击后轻轻响起</p>
+          </section>}
         </div>
       </header>
       <div className="ambient ambient-one" />
@@ -108,20 +125,20 @@ function App() {
       {menu && (
         <aside className="menu-panel">
           <div className="eyebrow">
-            <span /> A LITTLE PUSH. A BIG REACTION.
+            <span /> A QUIET WORLD. A GOLDEN TRACE.
           </div>
           {view === "main" ? (
             <>
               <h1>
-                小球，
+                轻推，
                 <br />
-                大有<span className="gradient-word">可玩。</span>
+                唤醒<span className="gradient-word">光芒。</span>
                 <span className="title-dot">✦</span>
               </h1>
               <p className="intro">
                 推动彩球，精准入洞！
                 <br />
-                在碰撞与连锁之间，找到刚刚好的力量。
+                在漂浮的几何花园，留下一道金色轨迹。
               </p>
               <button
                 className="primary start"
@@ -187,7 +204,7 @@ function App() {
                         <p>
                           {i === 1 && !unlocked
                             ? "完成静态推球后解锁"
-                            : `目标 ${l.goal} 分 · ${i === 0 ? "16 颗彩球" : "持续掉落"}`}
+                            : `目标 ${l.goal} 分 · ${i === 0 ? "16 颗彩球" : "32 颗彩球 · 炸弹空袭"}`}
                         </p>
                       </div>
                       {i === 1 && !unlocked ? (
@@ -222,7 +239,7 @@ function App() {
           </div>
           {menu ? (
             <span className="stage-tag">
-              3D LIVE SCENE <MoveUpRight size={13} />
+              FLOATING GARDEN <MoveUpRight size={13} />
             </span>
           ) : (
             <div className="game-actions">
@@ -247,9 +264,9 @@ function App() {
           )}
         </div>
         {!menu && (
-          <div className="scoreboard">
+          <div key={feedback.id} className={`scoreboard feedback-${feedback.kind}`}>
             <div>
-              <span>本局得分</span>
+              <span>第 {level} 关 · {data.name}</span>
               <b key={score} className="score-pop">
                 {score}
                 <small>/ {data.goal}</small>
@@ -263,7 +280,7 @@ function App() {
               />
             </div>
             <p>
-              {data.en}
+              {feedback.text || data.en}
               <span>{Math.round((score / data.goal) * 100)}%</span>
             </p>
           </div>
@@ -271,13 +288,13 @@ function App() {
         {menu && (
           <>
             <div className="player-callout">
-              <span>你的专属科技球</span>
+              <span>你的珍珠魔法球</span>
               <i />
             </div>
             <div className="scene-caption">
               <span>01 — THE FIRST PUSH</span>
               <b>静态推球</b>
-              <p>四种颜色，一场关于力量与方向的小游戏。</p>
+              <p>四座能量井，一场轻盈的金色漫游。</p>
             </div>
           </>
         )}
@@ -296,7 +313,7 @@ function App() {
             <i /> {menu ? "真实 3D 刚体模拟" : `${balls} 颗彩球在场`}
           </span>
           <span>
-            {menu ? "每一次碰撞，都有可能。" : "同色入洞 +1 · 小心别掉下去"}
+            {menu ? "每一次碰撞，都有可能。" : "同色 +1 · 错色 -1 · 小心洞口"}
           </span>
         </div>
         {["paused", "failed", "victory"].includes(status) && (
@@ -499,7 +516,7 @@ function Instructions() {
         <span>01</span>
         <p>
           <b>WASD / 方向键 · 滚动</b>
-          持续施加推力。松开按键后自然减速，重球需要一点耐心。
+          持续施加推力。松开按键后自然减速，普通彩球更易推动，多个球仍有阻力。
         </p>
       </div>
       <div>
@@ -513,14 +530,14 @@ function Instructions() {
         <span>03</span>
         <p>
           <b>同色入洞 · +1 分</b>
-          连锁撞击同样计分。错色球会消失，自己的球掉入洞口则失败。
+          连锁撞击同样计分。错色入洞 -1，自己的球掉入洞口则失败。
         </p>
       </div>
       <div>
         <span>04</span>
         <p>
           <b>10 分通关 · 解锁下一关</b>
-          第一关彩球有限，失误过多需重试；第二关持续掉球，目标 20 分。Esc 暂停。
+          第一关彩球有限，失误过多需重试；第二关躲避炸弹，命中 -1，目标 20 分。Esc 暂停。
         </p>
       </div>
     </div>

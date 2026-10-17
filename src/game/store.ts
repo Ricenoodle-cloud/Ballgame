@@ -1,3 +1,4 @@
+import { audio } from "./audio";
 import { create } from "zustand";
 import {
   CONFIG,
@@ -15,7 +16,7 @@ export type Effect = {
   z: number;
   color: string;
   text?: string;
-  kind: "score" | "wrong" | "dash" | "hit" | "spawn" | "win";
+  kind: "score" | "wrong" | "dash" | "hit" | "spawn" | "win" | "explosion";
   born: number;
 };
 export type Resolution = {
@@ -42,6 +43,8 @@ type State = {
   cooldown: number;
   effects: Effect[];
   reason: string;
+  feedback: { id: number; kind: "score" | "wrong"; text: string };
+  bombHit: (id: string, x: number, z: number) => void;
   start: (level: number) => void;
   menu: () => void;
   pause: () => void;
@@ -54,6 +57,7 @@ type State = {
   spawn: (b: BallData) => void;
 };
 let effectId = 0;
+const hitBombs = new Set<string>();
 export const useGame = create<State>((set, get) => ({
   status: "menu",
   level: 1,
@@ -65,14 +69,18 @@ export const useGame = create<State>((set, get) => ({
   cooldown: 0,
   effects: [],
   reason: "",
+  feedback: { id: 0, kind: "score", text: "" },
   start: (level) => {
     if (level === 2 && !get().unlocked) return;
+    audio.unlock();
+    hitBombs.clear();
     set((s) => ({
+      feedback: { id: 0, kind: "score", text: "" },
       status: "playing",
       level,
       score: 0,
       session: s.session + 1,
-      balls: initialBalls(),
+      balls: initialBalls(level === 2 ? 32 : 16),
       elapsed: 0,
       cooldown: 0,
       effects: [],
@@ -122,19 +130,24 @@ export const useGame = create<State>((set, get) => ({
     const unique = new Map(rows.map((r) => [r.id, r]));
     let score = s.score;
     const effects = [...s.effects];
+    let feedback = s.feedback;
     const balls = s.balls.filter((b) => {
       const r = unique.get(b.id);
       if (!r) return true;
       const correct = r.holeColor === b.color;
-      if (correct) score++;
+      if (r.holeColor) {
+        score = Math.max(0, score + (correct ? 1 : -1));
+        audio.play(correct ? "score" : "wrong");
+        feedback = { id: ++effectId, kind: correct ? "score" : "wrong", text: correct ? "+1" : "-1" };
+      }
       if (r.holeColor)
         effects.push({
           id: ++effectId,
           x: r.x,
           y: 0.3,
           z: r.z,
-          color: correct ? COLORS_LOCAL[b.color] : "#f998a9",
-          text: correct ? "+1" : "颜色不匹配",
+          color: correct ? COLORS_LOCAL[b.color] : "#c65370",
+          text: correct ? "+1" : "-1",
           kind: correct ? "score" : "wrong",
           born: s.elapsed,
         });
@@ -149,15 +162,24 @@ export const useGame = create<State>((set, get) => ({
       } catch {}
     }
     const impossible =
-      !won && s.level === 1 && score + balls.length < LEVELS[0].goal;
+      !won && score + balls.length < LEVELS[s.level - 1].goal;
     set({
       balls,
       score,
+      feedback,
       effects,
       status: won ? "victory" : impossible ? "failed" : s.status,
       unlocked,
       reason: impossible ? "剩余彩球不足以达到目标，再试一次吧。" : "",
     });
+  },
+  bombHit: (id, x, z) => {
+    const s = get();
+    if (s.status !== "playing" || hitBombs.has(id)) return;
+    hitBombs.add(id);
+    audio.play("hit");
+    set({ score: Math.max(0, s.score - 1), feedback: { id: ++effectId, kind: "wrong", text: "炸弹命中 -1" } });
+    s.effect({ x, y: 0.8, z, color: "#ff526a", text: "炸弹命中 -1", kind: "wrong" });
   },
   fall: () => {
     if (get().status === "playing")
