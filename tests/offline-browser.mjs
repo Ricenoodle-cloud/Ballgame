@@ -8,7 +8,7 @@ const browser=await chromium.launch({executablePath:process.env.CHROMIUM_PATH ||
 const context=await browser.newContext({offline:true,viewport:{width:1024,height:768}});
 let page=await context.newPage();
 let directFile=true;
-try { await page.goto(pathToFileURL(resolve('dist-offline/推小球闯关-V3-梦幻几何版.html')).href); }
+try { await page.goto(pathToFileURL(resolve('dist-offline/推小球闯关-V4-白色花语版.html')).href); }
 catch(e) {
  if(!String(e).includes('ERR_BLOCKED_BY_ADMINISTRATOR'))throw e;
  directFile=false;await page.close();page=await context.newPage();
@@ -18,7 +18,7 @@ const errors=[],network=[];
 page.on('pageerror',e=>errors.push(e.message));
 page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
 page.on('request',r=>{if(/^https?:/.test(r.url()))network.push(r.url());});
-if(!directFile)await page.setContent(await readFile('dist-offline/推小球闯关-V3-梦幻几何版.html','utf8'));
+if(!directFile)await page.setContent(await readFile('dist-offline/推小球闯关-V4-白色花语版.html','utf8'));
 await page.getByRole('button',{name:'开始游戏'}).click();
 await page.waitForTimeout(4000);
 assert.equal(await page.locator('.scene-error').count(),0);
@@ -26,7 +26,7 @@ assert.equal(await page.locator('canvas').count(),1);
 assert.ok(await page.locator('.scoreboard').isVisible());
 await page.keyboard.down('w');await page.waitForTimeout(500);await page.keyboard.press('Shift');await page.keyboard.up('w');
 await page.waitForTimeout(500);
-await page.screenshot({path:'work/v3-offline.png'});
+await page.screenshot({path:'work/v4-offline.png'});
 assert.deepEqual(network,[]);assert.deepEqual(errors,[]);
 console.log('PASS complete HTML loads offline, controls run, no HTTP requests or runtime errors; direct file navigation verified:',directFile);
 await browser.close();

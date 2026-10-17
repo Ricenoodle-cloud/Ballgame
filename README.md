@@ -1,12 +1,22 @@
-# 推小球闯关 V3 · 梦幻几何世界
+# 推小球闯关 V4 · 白色花语版
 
-基于 V2 的完整 React / Three.js / Rapier 游戏升级。原创的「Aurelia Orbit」悬浮几何花园，以奶油白、雾蓝、浅粉与香槟金呈现圆形竞技场、魔法光轨和宁静的程序音乐。场景、建筑、几何装饰、旋律与音色均通过项目代码创作，不使用其他游戏的关卡或音频素材。
+在 V3 完整游戏上局部增加几何藤蔓围栏和原创白色动态花卉，并放缓炸弹节奏。**V3 的镜头、灯光、天空、建筑布局、平台几何、球体、金色拖尾、音乐、UI 与玩法参数均保留。**新增花朵参考用户图片中的白色/奶油白宽瓣、多层重叠、柔软弯曲与半透明特征，以程序几何重新创作，未使用图片贴图或普通卡通雏菊模型。
+
+## V4 局部修改
+
+- 平台边缘加入浅奶油色细木条围栏；40 根几何木桩、低前景栏杆、6 段稀疏鼠尾草/薄荷绿藤蔓。视觉构件实例化绘制。
+- 96 个相互搭接的竖直静态盒形碰撞体形成封闭物理环，玩家和彩球受到真实阻挡；没有斜坡、柱缝或封住井口的实体。碰撞环顶高 1.56，视觉前景木桩更低以减少遮挡。
+- 8 处白花全部在可玩圆盘外。每朵 20 片、3 层共享曲面花瓣，奶油白渐变、自然波边、柔和透明高光与淡色花蕊；13.6 秒错峰开合，每层盛开停留约 2 秒。6 片轻盈飘落花瓣不参与碰撞。两处主要花朵保留较细曲面，远处小花使用较低细分的共享曲面；所有花瓣合计少于 12,000 个三角面，采用轻量 Standard 透明材质与单通道双面绘制。
+- 开局前 6 秒不生成炸弹预警；第一次预警在第 6 秒，1.5 秒后开始下落。后续间隔前期约 8 秒、45 秒后约 7 秒、90 秒后约 6 秒，各带 ±0.35 秒浮动，硬下限 5 秒。同时最多一颗未爆炸炸弹。
+- 暂停保留炸弹、预警年龄及生成倒计时，恢复继续；失败、胜利、返回菜单和重开时清理。与 V3 的“暂停清空炸弹并重置倒计时”行为不同。
+
+
 
 ## 下载离线游戏
 
-打开当前分支根目录 `推小球闯关-V3-梦幻几何版.html`，点击 GitHub 的 **Download raw file**，保存为 `.html`。在 Windows Edge / Chrome 中双击打开。
+打开当前分支根目录 `推小球闯关-V4-白色花语版.html`，点击 GitHub 的 **Download raw file**，保存为 `.html`。在 Windows Edge / Chrome 中双击打开。
 
-所有 JavaScript、CSS、图标、Rapier WASM 和音乐生成程序均内嵌；不需要服务器、CDN 或在线音频。V2 离线 HTML 也保留在仓库中。
+所有 JavaScript、CSS、图标、Rapier WASM 和音乐生成程序均内嵌；不需要服务器、CDN 或在线音频。V2 与 V3 的离线 HTML 也保留在仓库中。
 
 当前测试环境的浏览器管理员策略可能禁止 `file://` 导航。测试脚本会首先尝试直接打开文件，仅在明确收到该策略错误时改用断网浏览器直接载入完整 HTML。实际结果见 `TEST_REPORT.md`；不能把这种替代验证当作 Windows 双击验收。
 
@@ -14,13 +24,13 @@
 
 - WASD / 方向键移动；左 Shift / 空格冲刺；Esc 暂停。
 - 同色能量井 +1，错色 -1，最低 0 分。间接碰撞进洞照常结算，球只结算一次。
-- 玩家落井或滚出圆形平台失败。
+- 玩家落井失败；围栏阻止正常移动、冲刺和爆炸击退将球推出圆盘。
 - 第一关：16 颗混合彩球，10 分通关，解锁「天下无敌」及第二关。
 - 第二关：32 颗地面彩球，20 分通关。天空只掉炸弹：预警 1.5 秒后下落，接触地面或球体即爆炸，玩家在 2.4 单位范围内扣 1 分并受真实冲量。模型与预警同步清理。
 - 顶部声音按钮可分别开关背景音乐、游戏音效，调整两个音量。设置与关卡解锁分别存入 localStorage；存储不可用时仍可游玩，但无法保存设置。
 - 浏览器要求首次点击/按键后才能发声，主菜单初次加载时不会强行自动播放。解锁后菜单及游戏均播放原创 BGM，第二关加入少量悬念音符；暂停时音乐降低音量。
 
-## V3 实现
+## 保留的 V3 实现
 
 - 半径 9 的平滑圆盘，厚度 0.9；四井中心位于 `(±4.4, ±3.6)`。渲染与静态 Trimesh Collider 使用同一开孔几何体，没有完整圆柱/方形碰撞体。侧面金线及环形台阶只是开放装饰环，不会封井。
 - 彩球使用 `sqrt(U)` 的圆形面积均匀采样，再检查球间距、洞口、出生点与边缘安全距离。每个象限包含所有颜色。炸弹落点也采用圆形采样并避开洞口。
@@ -34,26 +44,29 @@ Node.js 24：
 
 ```sh
 npm install
-npm run dev -- --port 5174
+npm run dev -- --port 5175
 npm test
 npm run build
 npm run export:offline
 ```
 
-输出：`dist-offline/推小球闯关-V3-梦幻几何版.html`。也可执行 `node scripts/export-offline.mjs "推小球闯关-V3-梦幻几何版.html"` 指定路径。
+输出：`dist-offline/推小球闯关-V4-白色花语版.html`。也可执行 `node scripts/export-offline.mjs "推小球闯关-V4-白色花语版.html"` 指定路径。
 
 另开终端，在开发服务器运行时执行：
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
-CHROMIUM_PATH=/usr/bin/chromium node tests/audio-trail-browser.mjs
+GAME_URL=http://localhost:5175 CHROMIUM_PATH=/usr/bin/chromium node tests/audio-trail-browser.mjs
 CHROMIUM_PATH=/usr/bin/chromium npm run test:offline
 ```
 
-`GAME_URL` 可覆盖默认 `http://localhost:5174`；音频回归会实际等待完整乐曲跨越循环边界，约两分钟。浏览器需支持 WebGL、Web Audio。调试接口仅存在于开发构建，正式离线包不包含这些接口。
+`GAME_URL` 可覆盖默认 `http://localhost:5175`。音频回归脚本保留供 V3 音乐复查，可通过 `GAME_URL` 指定当前服务，完整乐曲跨越循环边界约两分钟。浏览器需支持 WebGL、Web Audio。调试接口仅存在于开发构建，正式离线包不包含这些接口。
 
 ## 主要文件
 
+- `src/components/Fence.tsx` / `src/game/fence.ts`：几何围栏、藤蔓与连续物理环。
+- `src/components/WhiteFlowers.tsx` / `src/game/flowers.ts`：共享曲面花瓣、实例化层叠花朵与平滑开合。
+- `src/game/bombSchedule.ts`：安全期、慢节奏、暂停不重置的游戏时间调度。
 - `src/game/config.ts`：物理、关卡、圆盘生成与安全距离。
 - `src/game/arenaGeometry.ts` / `src/components/Arena.tsx`：同源圆形开孔渲染与物理、装饰。
 - `src/components/DreamWorld.tsx`：原创几何建筑背景。
