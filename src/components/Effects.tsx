@@ -51,7 +51,7 @@ function Burst({ effect }: { effect: Effect }) {
         <Html center position={[0, 1.2, 0]}>
           <span
             className={`score-float ${effect.kind === "wrong" ? "wrong" : ""}`}
-            style={{ color: effect.kind === "score" ? "#bcffb5" : effect.color }}
+            style={{ color: effect.kind === "score" ? "#a37c32" : effect.color }}
           >
             {effect.text}
           </span>

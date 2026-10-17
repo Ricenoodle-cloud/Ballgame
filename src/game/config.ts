@@ -1,8 +1,8 @@
 export const COLORS = {
-  red: "#ff668b",
-  blue: "#55baff",
-  green: "#59e5ba",
-  yellow: "#ffd263",
+  red: "#d97b94",
+  blue: "#70a9cf",
+  green: "#79b9a5",
+  yellow: "#e1bd67",
 } as const;
 export type ColorKey = keyof typeof COLORS;
 export const COLOR_NAMES: Record<ColorKey, string> = {
@@ -25,8 +25,10 @@ export const CONFIG = {
   step: 1 / 120,
   friction: 0.55,
   restitution: 0.32,
+  arenaRadius: 9,
+  edgeMargin: 1.1,
   width: 18,
-  depth: 14,
+  depth: 18,
   holeRadius: 1.05,
   spawnInitial: 4,
   spawnMinimum: 1.5,
@@ -38,10 +40,10 @@ export const CONFIG = {
   maxBalls: 40,
 };
 export const HOLES: { id: string; color: ColorKey; x: number; z: number }[] = [
-  { id: "h-red", color: "red", x: -6.4, z: -4.3 },
-  { id: "h-blue", color: "blue", x: 6.4, z: -4.3 },
-  { id: "h-green", color: "green", x: -6.4, z: 4.3 },
-  { id: "h-yellow", color: "yellow", x: 6.4, z: 4.3 },
+  { id: "h-red", color: "red", x: -4.4, z: -3.6 },
+  { id: "h-blue", color: "blue", x: 4.4, z: -3.6 },
+  { id: "h-green", color: "green", x: -4.4, z: 3.6 },
+  { id: "h-yellow", color: "yellow", x: 4.4, z: 3.6 },
 ];
 export const LEVELS = [
   {
@@ -78,8 +80,7 @@ export function initialBalls(count = 16, random = Math.random): BallData[] {
     for (let i = 0; i < palette.length; i++) {
       let position: [number, number, number] | undefined;
       for (let attempt = 0; attempt < 5000; attempt++) {
-        const x = (0.55 + random() * 7.55) * (q % 2 ? 1 : -1);
-        const z = (0.55 + random() * 5.55) * (q < 2 ? -1 : 1);
+        const { x, z } = sampleDisk(CONFIG.arenaRadius - CONFIG.edgeMargin, random, q);
         if (Math.hypot(x, z - 1.4) < 1.65 ||
             HOLES.some(h => Math.hypot(h.x - x, h.z - z) < 2) ||
             balls.some(b => Math.hypot(b.position[0] - x, b.position[2] - z) < 1.15)) continue;
@@ -93,13 +94,7 @@ export function initialBalls(count = 16, random = Math.random): BallData[] {
   return balls;
 }
 export function randomBall(id: string): BallData {
-  let x = 0,
-    z = 0;
-  for (let i = 0; i < 30; i++) {
-    x = (Math.random() - 0.5) * 15;
-    z = (Math.random() - 0.5) * 11;
-    if (HOLES.every((h) => Math.hypot(h.x - x, h.z - z) > 2)) break;
-  }
+  const { x, z } = safeBombPoint();
   return {
     id,
     color: (Object.keys(COLORS) as ColorKey[])[Math.floor(Math.random() * 4)],
@@ -111,4 +106,19 @@ export function holeAt(x: number, z: number) {
   return HOLES.find(
     (h) => Math.hypot(h.x - x, h.z - z) < CONFIG.holeRadius + 0.15,
   );
+}
+
+// sqrt(U) gives uniform area density, including when restricted to a quadrant.
+export function sampleDisk(radius: number, random = Math.random, quadrant?: number) {
+  const angle = quadrant === undefined ? random() * Math.PI * 2 :
+    (quadrant < 2 ? Math.PI : 0) + (quadrant % 2 ? Math.PI / 2 : 0) + random() * Math.PI / 2;
+  const distance = Math.sqrt(random()) * radius;
+  return { x: Math.cos(angle) * distance, z: Math.sin(angle) * distance };
+}
+export function safeBombPoint(random = Math.random) {
+  for (let i = 0; i < 5000; i++) {
+    const p = sampleDisk(CONFIG.arenaRadius - CONFIG.bombRadius - 0.5, random);
+    if (HOLES.every(h => Math.hypot(h.x - p.x, h.z - p.z) > CONFIG.holeRadius + CONFIG.bombRadius + 0.2)) return p;
+  }
+  throw new Error("Unable to sample bomb landing point");
 }

@@ -89,3 +89,16 @@ test("dash transfers real momentum through a chain of heavy balls with CCD", () 
   assert.ok(a.translation().x < b.translation().x, "no ball tunneling");
   w.free();
 });
+test('circular collision has no invisible square floor or retaining walls', () => {
+  const w=arena();
+  const inside=ball(w,8.25,.6,0,CONFIG.targetMass);
+  // (8,6) was inside the old rectangular platform, but is outside the circle.
+  const outside=[[8,6],[-8,6],[8,-6],[-8,-6],[0,10]].map(([x,z])=>ball(w,x,.6,z,CONFIG.targetMass));
+  const edge=ball(w,0,.6,8.3,1,0);
+  edge.setLinvel({x:0,y:0,z:4},true);
+  for(let i=0;i<240;i++)w.step();
+  assert.ok(inside.translation().y>.4,'inside disk remains supported');
+  outside.forEach(b=>assert.ok(b.translation().y<-3,'outside disk must fall'));
+  assert.ok(edge.translation().y<-2,'can roll over circular edge without an invisible wall');
+  w.free();
+});

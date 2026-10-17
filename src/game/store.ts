@@ -146,7 +146,7 @@ export const useGame = create<State>((set, get) => ({
           x: r.x,
           y: 0.3,
           z: r.z,
-          color: correct ? COLORS_LOCAL[b.color] : "#f998a9",
+          color: correct ? COLORS_LOCAL[b.color] : "#c65370",
           text: correct ? "+1" : "-1",
           kind: correct ? "score" : "wrong",
           born: s.elapsed,

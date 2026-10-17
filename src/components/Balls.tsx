@@ -6,6 +6,7 @@ import {
   useBeforePhysicsStep,
   type RapierRigidBody,
 } from "@react-three/rapier";
+import { GoldenTrail } from "./GoldenTrail";
 import { Html } from "@react-three/drei";
 import { COLORS, CONFIG, type BallData } from "../game/config";
 import { direction, input } from "../game/input";
@@ -21,9 +22,6 @@ export function PlayerBall() {
   const last = useRef({ x: 0, z: -1 });
   const flash = useRef<THREE.MeshStandardMaterial>(null);
   const dashAt = useRef(-10);
-  const trail = useRef<THREE.Group>(null);
-  const trailPoints = useRef<THREE.Vector3[]>([]);
-  const tick = useRef(0);
   useEffect(() => {
     registry.player = ref.current;
     return () => {
@@ -74,40 +72,22 @@ export function PlayerBall() {
           x: pos.x,
           y: pos.y,
           z: pos.z,
-          color: "#a8e8ff",
+          color: "#f4d38c",
           kind: "dash",
         });
       }
     }
   });
-  useFrame((_, dt) => {
+  useFrame(() => {
     const rb = ref.current;
     if (!rb) return;
     const s = useGame.getState();
     if (flash.current)
       flash.current.emissiveIntensity =
         s.elapsed - dashAt.current < 0.25
-          ? 2
+          ? 0.8
           : 0.18 + Math.sin(s.elapsed * 2) * 0.08;
-    if (s.status !== "playing") { trailPoints.current = []; }
-    const speed = Math.hypot(rb.linvel().x, rb.linvel().z);
-    const dash = s.elapsed - dashAt.current < 0.45;
-    if (s.status === "playing") {
-      tick.current += dt;
-      if (tick.current > 0.035) {
-        tick.current = 0;
-        const p = rb.translation();
-        if (speed > 0.15) trailPoints.current.unshift(new THREE.Vector3(p.x, p.y, p.z));
-        else trailPoints.current.pop();
-        trailPoints.current = trailPoints.current.slice(0, 24);
-      }
-    }
-    trail.current?.children.forEach((c, i) => {
-      const p = trailPoints.current[i];
-      c.visible = !!p && i > 0 && i < (dash ? 24 : Math.max(2, speed * 2.5));
-      if (p) c.position.copy(p);
-      c.scale.setScalar((1 - i / 24) * (dash ? 0.22 : 0.13));
-    });
+
   });
   return (
     <>
@@ -128,10 +108,10 @@ export function PlayerBall() {
           <sphereGeometry args={[CONFIG.radius, 40, 28]} />
           <meshStandardMaterial
             ref={flash}
-            color="#e7f6ff"
+            color="#fff7e8"
             roughness={0.24}
             metalness={0.35}
-            emissive="#54baff"
+            emissive="#d6b575"
             emissiveIntensity={0.2}
           />
         </mesh>
@@ -139,9 +119,9 @@ export function PlayerBall() {
           <mesh key={i} rotation={[rot, 0, 0.35]}>
             <torusGeometry args={[0.444, 0.035, 8, 64]} />
             <meshStandardMaterial
-              color="#309fff"
-              emissive="#1c8aff"
-              emissiveIntensity={0.6}
+              color="#caa567"
+              emissive="#e0be76"
+              emissiveIntensity={0.25}
               metalness={0.5}
               roughness={0.3}
             />
@@ -149,21 +129,10 @@ export function PlayerBall() {
         ))}
         <mesh position={[0, 0.447, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <circleGeometry args={[0.14, 16]} />
-          <meshBasicMaterial color="#103c78" />
+          <meshBasicMaterial color="#ae8c54" />
         </mesh>
       </RigidBody>
-      <group ref={trail}>
-        {Array.from({ length: 24 }, (_, i) => (
-          <mesh key={i} visible={false}>
-            <sphereGeometry args={[1, 8, 8]} />
-            <meshBasicMaterial
-              color="#90dcff"
-              transparent
-              opacity={0.36 * (1 - i / 24)}
-            />
-          </mesh>
-        ))}
-      </group>
+      <GoldenTrail body={ref} dashAt={dashAt} />
     </>
   );
 }

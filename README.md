@@ -1,58 +1,65 @@
-# 推小球闯关 V2 · ORBIT BALL
+# 推小球闯关 V3 · 梦幻几何世界
 
-在原有 React / Three.js / Rapier 3D 游戏上升级，保留平台、真实球体碰撞、双关卡、暂停/失败/胜利/重试和「天下无敌」称号。
+基于 V2 的完整 React / Three.js / Rapier 游戏升级。原创的「Aurelia Orbit」悬浮几何花园，以奶油白、雾蓝、浅粉与香槟金呈现圆形竞技场、魔法光轨和宁静的程序音乐。场景、建筑、几何装饰、旋律与音色均通过项目代码创作，不使用其他游戏的关卡或音频素材。
 
 ## 下载离线游戏
 
-下载仓库根目录的 `推小球闯关-V2-离线版.html`：打开文件页面，点击 **Download raw file**（下载原始文件）。保存为 `.html` 后用 Windows Chrome 或 Edge 打开。所有 JavaScript、CSS、图标和 Rapier WASM 已内嵌，不需要服务器或网络。
+打开当前分支根目录 `推小球闯关-V3-梦幻几何版.html`，点击 GitHub 的 **Download raw file**，保存为 `.html`。在 Windows Edge / Chrome 中双击打开。
 
-当前验收环境禁止浏览器导航到 `file://`，因此未验证 Windows 上双击文件的运行方式。完整 HTML 已在断网 Chromium 中直接载入并显示 3D 场景，未发起 HTTP 请求，未出现运行错误。
+所有 JavaScript、CSS、图标、Rapier WASM 和音乐生成程序均内嵌；不需要服务器、CDN 或在线音频。V2 离线 HTML 也保留在仓库中。
 
-## 玩法
+当前测试环境的浏览器管理员策略可能禁止 `file://` 导航。测试脚本会首先尝试直接打开文件，仅在明确收到该策略错误时改用断网浏览器直接载入完整 HTML。实际结果见 `TEST_REPORT.md`；不能把这种替代验证当作 Windows 双击验收。
 
-- WASD / 方向键移动，左 Shift / 空格冲刺，Esc 暂停。
-- 同色入洞 +1，错色入洞 -1，最低 0 分；间接碰撞入洞也结算，每颗球只结算一次。
-- 玩家落洞或离开平台失败。
-- 第一关 16 颗彩球，10 分通关，解锁第二关与「天下无敌」。
-- 第二关 32 颗彩球，20 分通关。天空只掉炸弹，不再生成彩球。预警 1.5 秒后炸弹下落，接触平台或球体立即爆炸，玩家在 2.4 单位范围内扣 1 分并受物理击退。
-- 炸弹本身不会直接判失败；击退后落洞仍失败。彩球不足以达标时需重试。
-- 音效默认开启，顶部支持开关及音量调整；声音在开始或首次操作时解锁。
+## 玩法与声音
 
-## 开发与验证
+- WASD / 方向键移动；左 Shift / 空格冲刺；Esc 暂停。
+- 同色能量井 +1，错色 -1，最低 0 分。间接碰撞进洞照常结算，球只结算一次。
+- 玩家落井或滚出圆形平台失败。
+- 第一关：16 颗混合彩球，10 分通关，解锁「天下无敌」及第二关。
+- 第二关：32 颗地面彩球，20 分通关。天空只掉炸弹：预警 1.5 秒后下落，接触地面或球体即爆炸，玩家在 2.4 单位范围内扣 1 分并受真实冲量。模型与预警同步清理。
+- 顶部声音按钮可分别开关背景音乐、游戏音效，调整两个音量。设置与关卡解锁分别存入 localStorage；存储不可用时仍可游玩，但无法保存设置。
+- 浏览器要求首次点击/按键后才能发声，主菜单初次加载时不会强行自动播放。解锁后菜单及游戏均播放原创 BGM，第二关加入少量悬念音符；暂停时音乐降低音量。
+
+## V3 实现
+
+- 半径 9 的平滑圆盘，厚度 0.9；四井中心位于 `(±4.4, ±3.6)`。渲染与静态 Trimesh Collider 使用同一开孔几何体，没有完整圆柱/方形碰撞体。侧面金线及环形台阶只是开放装饰环，不会封井。
+- 彩球使用 `sqrt(U)` 的圆形面积均匀采样，再检查球间距、洞口、出生点与边缘安全距离。每个象限包含所有颜色。炸弹落点也采用圆形采样并避开洞口。
+- 金色 Ribbon Trail 使用 64 点轨迹上限、预分配动态 GPU 缓冲区和 16 个复用闪光粒子。渐细/渐淡、跟随转弯、冲刺增强，暂停/失败/重开时清理；不参与碰撞。
+- 原创拱门、悬浮阶梯、石柱、漂浮几何块和光点都放在可玩圆盘外；柔光、阴影、轻雾与无 Bloom 的清晰色彩。
+- Web Audio 原创乐曲为 72 BPM、32 小节，约 106.7 秒；四组八小节变化乐句，包含钟琴/钢琴式衰减音、温暖和弦铺底及本地生成的混响。持续调度音符并保留尾音跨越循环，无音频文件或网络请求。
+
+## 开发与测试
 
 Node.js 24：
 
 ```sh
 npm install
-npm run dev
-npm run build
+npm run dev -- --port 5174
 npm test
+npm run build
 npm run export:offline
 ```
 
-离线输出：`dist-offline/推小球闯关-V2-离线版.html`。可指定输出路径：`node scripts/export-offline.mjs "推小球闯关-V2-离线版.html"`。
+输出：`dist-offline/推小球闯关-V3-梦幻几何版.html`。也可执行 `node scripts/export-offline.mjs "推小球闯关-V3-梦幻几何版.html"` 指定路径。
 
-浏览器回归（另一个终端先运行 `npm run dev`）：
+另开终端，在开发服务器运行时执行：
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
-npm run export:offline
+CHROMIUM_PATH=/usr/bin/chromium node tests/audio-trail-browser.mjs
 CHROMIUM_PATH=/usr/bin/chromium npm run test:offline
 ```
 
-浏览器脚本使用本机 Chromium，`CHROMIUM_PATH` 可以指定其他 Chrome/Edge 可执行文件。`GAME_URL` 可覆盖开发地址。调试接口只存在于开发构建。离线测试通过直接载入 HTML 验证断网运行，不等价于 `file://` 双击验收。
+`GAME_URL` 可覆盖默认 `http://localhost:5174`；音频回归会实际等待完整乐曲跨越循环边界，约两分钟。浏览器需支持 WebGL、Web Audio。调试接口仅存在于开发构建，正式离线包不包含这些接口。
 
-## 代码结构与调参
+## 主要文件
 
-- `src/game/config.ts`：物理参数、炸弹参数、关卡、随机生成。每个场地区域包含所有颜色；采样检查球间距、洞口和出生点安全距离。
-- `src/game/store.ts`：得分事件、去重、关卡状态、炸弹伤害去重。
-- `src/game/audio.ts`：Web Audio 程序音效，无外部音频。
-- `src/components/Game.tsx`：物理/落洞监测、镜头、场景；记录入洞颜色，避免下落漂移丢失判定。
-- `src/components/Balls.tsx`：玩家与目标球刚体、24 点轻量轨迹缓存。
-- `src/components/Bombs.tsx`：预警、物理下落、接触爆炸、径向冲量、统一生命周期清理；暂停时移除现存炸弹并重置生成倒计时。
-- `src/components/Effects.tsx`：漂浮分数、粒子与冲击波，播放结束自动清理。
-- `scripts/export-offline.mjs`：内联构建结果及图标；Rapier compat 自带内嵌 WASM。
+- `src/game/config.ts`：物理、关卡、圆盘生成与安全距离。
+- `src/game/arenaGeometry.ts` / `src/components/Arena.tsx`：同源圆形开孔渲染与物理、装饰。
+- `src/components/DreamWorld.tsx`：原创几何建筑背景。
+- `src/components/GoldenTrail.tsx`：动态金色渐变光带与粒子。
+- `src/game/audio.ts`：原创乐谱、实时音乐调度、合成音效及音频设置存档。
+- `src/game/store.ts`：得分去重、炸弹伤害、解锁与胜负状态。
+- `tests/`：真实 Rapier 物理、规则、生成、音频、浏览器与离线回归。
 
-玩家质量 1，目标球质量 1.7；普通球线性阻尼 0.35、角阻尼 0.5；冲刺冲量保持 10.5。炸弹间隔从 4 秒递减到 1.5 秒，同时最多 5 颗。所有时间均随游戏模拟推进，暂停时不会积压系统定时器。
-
-详细验证结果见 `TEST_REPORT.md`。
+详细测试结果及平台限制见 `TEST_REPORT.md`。

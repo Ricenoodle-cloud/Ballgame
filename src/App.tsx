@@ -1,4 +1,4 @@
-import { Component, useState, type ReactNode } from "react";
+import { Component, useEffect, useState, type ReactNode } from "react";
 import {
   ArrowUpRight,
   ArrowRight,
@@ -14,7 +14,6 @@ import {
   Target,
   Zap,
   Keyboard,
-  VolumeX,
   Volume2,
   Orbit,
   Home,
@@ -47,10 +46,17 @@ class SceneBoundary extends Component<
 }
 function App() {
   const feedback = useGame(s => s.feedback);
-  const [sound, setSound] = useState(audio.enabled);
-  const [volume, setVolume] = useState(audio.volume);
+  const [audioSettings, setAudioSettings] = useState(audio.settings);
+  const [audioOpen, setAudioOpen] = useState(false);
+  const updateAudio = (patch: Partial<typeof audioSettings>) => { audio.configure(patch); setAudioSettings({...audio.settings}); };
   const status = useGame((s) => s.status);
   const level = useGame((s) => s.level);
+  useEffect(() => {
+    audio.setScene(level, status);
+    if (status === "victory") audio.play("victory");
+    if (status === "failed") audio.play("failed");
+    if (import.meta.env.DEV) Object.assign(window, { __orbitAudio: audio });
+  }, [status, level]);
   const score = useGame((s) => s.score);
   const unlocked = useGame((s) => s.unlocked);
   const elapsed = useGame((s) => s.elapsed);
@@ -83,13 +89,13 @@ function App() {
             <Orbit size={25} />
           </span>
           <span>
-            ORBIT<span className="brand-light"> BALL</span>
+            AURELIA<span className="brand-light"> ORBIT</span>
             <small>推小球闯关</small>
           </span>
         </a>
         <div className="top-nav">
           <span className="edition">
-            PHYSICS PLAYGROUND <i /> VOL. 01
+            DREAM GEOMETRY <i /> VOL. 03
           </span>
           <button
             className="icon-button"
@@ -103,10 +109,15 @@ function App() {
           >
             <HelpCircle size={19} />
           </button>
-          <button className="icon-button" aria-label={sound ? "关闭音效" : "开启音效"} onClick={() => { audio.enabled = !sound; setSound(!sound); audio.unlock(); }}>
-            {sound ? <Volume2 size={18} /> : <VolumeX size={18} />}
-          </button>
-          <input className="volume-slider" aria-label="音效音量" type="range" min="0" max="1" step="0.05" value={volume} onChange={e => { const v = Number(e.target.value); audio.volume = v; setVolume(v); }} />
+          <button className="icon-button" aria-label="音频设置" aria-expanded={audioOpen} onClick={() => setAudioOpen(!audioOpen)}><Volume2 size={18} /></button>
+          {audioOpen && <section className="audio-panel" aria-label="音频设置面板">
+            <h3>声音花园 <small>SOUND GARDEN</small></h3>
+            <label><span>背景音乐</span><input aria-label="背景音乐开关" type="checkbox" checked={audioSettings.musicEnabled} onChange={e=>updateAudio({musicEnabled:e.target.checked})} /></label>
+            <label><span>音乐音量</span><input aria-label="背景音乐音量" type="range" min="0" max="1" step="0.01" value={audioSettings.musicVolume} onChange={e=>updateAudio({musicVolume:Number(e.target.value)})} /></label>
+            <label><span>游戏音效</span><input aria-label="音效开关" type="checkbox" checked={audioSettings.sfxEnabled} onChange={e=>updateAudio({sfxEnabled:e.target.checked})} /></label>
+            <label><span>音效音量</span><input aria-label="音效音量" type="range" min="0" max="1" step="0.01" value={audioSettings.sfxVolume} onChange={e=>updateAudio({sfxVolume:Number(e.target.value)})} /></label>
+            <p>原创旋律 · 在第一次点击后轻轻响起</p>
+          </section>}
         </div>
       </header>
       <div className="ambient ambient-one" />
@@ -114,20 +125,20 @@ function App() {
       {menu && (
         <aside className="menu-panel">
           <div className="eyebrow">
-            <span /> A LITTLE PUSH. A BIG REACTION.
+            <span /> A QUIET WORLD. A GOLDEN TRACE.
           </div>
           {view === "main" ? (
             <>
               <h1>
-                小球，
+                轻推，
                 <br />
-                大有<span className="gradient-word">可玩。</span>
+                唤醒<span className="gradient-word">光芒。</span>
                 <span className="title-dot">✦</span>
               </h1>
               <p className="intro">
                 推动彩球，精准入洞！
                 <br />
-                在碰撞与连锁之间，找到刚刚好的力量。
+                在漂浮的几何花园，留下一道金色轨迹。
               </p>
               <button
                 className="primary start"
@@ -228,7 +239,7 @@ function App() {
           </div>
           {menu ? (
             <span className="stage-tag">
-              3D LIVE SCENE <MoveUpRight size={13} />
+              FLOATING GARDEN <MoveUpRight size={13} />
             </span>
           ) : (
             <div className="game-actions">
@@ -277,13 +288,13 @@ function App() {
         {menu && (
           <>
             <div className="player-callout">
-              <span>你的专属科技球</span>
+              <span>你的珍珠魔法球</span>
               <i />
             </div>
             <div className="scene-caption">
               <span>01 — THE FIRST PUSH</span>
               <b>静态推球</b>
-              <p>四种颜色，一场关于力量与方向的小游戏。</p>
+              <p>四座能量井，一场轻盈的金色漫游。</p>
             </div>
           </>
         )}

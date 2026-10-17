@@ -1312,3 +1312,60 @@ kbd {
   .is-game .scoreboard .progress-track { margin-top: 8px; }
   .is-game .scoreboard p { margin-top: 5px; }
 }
+
+/* V3 · Aurelia, an original floating geometry garden. */
+:root { color:#554d63; background:#f3ece8; font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; }
+.app { background:radial-gradient(ellipse at 73% 28%,#e5dce9 0,transparent 58%),linear-gradient(135deg,#faf3e9,#ece3eb 65%,#dae5e4); }
+.topbar { border-bottom-color:#ae906d30; }
+.brand { font-family:Georgia,"Songti SC",serif; font-weight:500; letter-spacing:2px; }
+.brand-icon { color:#9c7a49; background:#fff8ea99; border:1px solid #c8ac7d80; border-radius:50%; }
+.brand-light,.brand small { color:#8e7d8f; }
+.edition,.eyebrow,.intro,.menu-note,.small-achievement p,.stage-label,.stage-tag,.scene-caption>span,.scene-caption p,.color-legend>div,.stage-bottom,.timer,.footer-note,.controls div>span,.level-card small,.level-card p,.modal p,.result-score span,.instructions p { color:#7d7085; }
+.eyebrow>span,.live-dot { background:#bca477; box-shadow:0 0 8px #e0c49266; }
+.menu-panel h1 { font-family:"Songti SC","STSong",Georgia,serif; font-weight:500; letter-spacing:4px; }
+.gradient-word { background-image:linear-gradient(100deg,#b58d53,#bd8f9d); }
+.title-dot { color:#bd9b68; }
+.primary { color:#665039; background:linear-gradient(110deg,#f2dfb5,#e6cda1); border:1px solid #b79a6655; border-radius:4px 16px 4px 16px; box-shadow:0 8px 25px #a7876120; }
+.primary:hover:not(:disabled) { filter:brightness(1.04); }
+.menu-actions button,.text-button,.menu-actions button>svg { color:#82708a; }
+.small-achievement { border-top-color:#bea98944; }
+.small-achievement b { color:#77644e; }
+.achievement-icon { color:#ad884d; background:#f7e7c6; }
+.stage { background:radial-gradient(ellipse at 70% 10%,#f5e7df66,transparent 60%),linear-gradient(155deg,#e9dce8,#dce4e7 65%,#f0e5de); border:1px solid #fff8eaaa; box-shadow:inset 0 0 70px #f8f0e833,0 15px 50px #9f8da517; border-radius:100px 24px 100px 24px; }
+.is-game .stage { border-radius:28px; }
+.ambient { opacity:.06; }
+.ambient-one { background:#e6b7c4; }.ambient-two { background:#b8a2d1; }
+.scene-caption b { color:#79677f; font-family:"Songti SC",serif; }
+.player-callout { display:none; }
+.bottom-bar { border-top-color:#b8a27e30; }
+.controls b { color:#72617c; }
+kbd,.shift-key { color:#8b745c; background:#fff8ec99; border-color:#bd9e6d66; box-shadow:0 2px 0 #c8b89544; }
+.control-divider { background:#b39e8340; }
+.icon-button { color:#816d83; background:#fff8f188; border-color:#bda77f50; }
+.progress-track,.dash-track { background:#d9cdd8; }.progress-track>div,.dash-track i { background:linear-gradient(90deg,#bea272,#e5c98c); }
+.is-game .scoreboard { background:#fff9efeb; border-color:#bd9a63aa; box-shadow:0 6px 25px #89738920; border-radius:5px 20px 5px 20px; }
+.is-game .scoreboard b { color:#977236; font-family:Georgia,serif; }
+.is-game .scoreboard small { color:#a6989f; }
+.is-game .scoreboard>div>span,.is-game .scoreboard p,.scoreboard p>span { color:#7b6b80; }
+.feedback-wrong .score-pop { color:#c25c73; }
+.modal-scrim,.global-scrim { background:#a998b05c; backdrop-filter:blur(8px); }
+.modal { color:#63566f; background:linear-gradient(145deg,#fffaf0f5,#eee3edf5); border:1px solid #c6a77399; box-shadow:0 20px 65px #7c688433; border-radius:6px 28px 6px 28px; }
+.modal-symbol { background:#eddfcf; border-color:#c6a67b70; color:#ad8a55; }
+.secondary { color:#856e87; background:#fff8ef66; border-color:#b6a0b355; }
+.unlocked-title { color:#a27d3c; text-shadow:0 0 16px #ebc97b55; }
+.victory .modal-symbol { color:#a27d3c; background:#f0e3c6; border-color:#c4a66d; }
+.level-card { background:linear-gradient(120deg,#fff9edc9,#e6dbe88c); border-color:#bfa57577; box-shadow:0 6px 18px #8f7b9410; border-radius:4px 16px 4px 16px; }
+.level-no,.level-card>svg,.instructions>div>span { color:#b09261; }
+.instructions b { color:#695872; }
+.audio-panel { position:absolute; right:0; top:76px; width:280px; padding:20px; border:1px solid #c3a46a99; background:#fff9eff5; color:#6e5d76; box-shadow:0 14px 40px #7c698733; border-radius:5px 20px; z-index:10; }
+.audio-panel h3 { margin:0 0 18px; font-size:16px; font-weight:500; }
+.audio-panel h3 small { display:block; font-size:8px; letter-spacing:2px; margin-top:5px; color:#a48c69; }
+.audio-panel label { display:flex; align-items:center; justify-content:space-between; gap:16px; margin:14px 0; font-size:12px; }
+.audio-panel input[type=range] { width:130px; }.audio-panel input { accent-color:#b59460; }
+.audio-panel p { font-size:10px; color:#a193a3; margin:18px 0 0; }
+button:focus-visible,a:focus-visible { outline-color:#ba9560; }
+@keyframes reward-pop {40% {transform:scale(1.16);color:#9e9a62;text-shadow:0 0 15px #dec592;}}
+@keyframes penalty-flash {30% {background:#f2c9ce;border-color:#bf667c;}}
+@media (max-width:800px) {.audio-panel {right:0;top:65px;} .stage {border-radius:28px;}}
+.is-game .stage-label { color:#7d7085; }
+.mini-balls i { border-color:#f1e9e5; }

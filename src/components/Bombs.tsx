@@ -3,7 +3,7 @@ import { useFrame } from "@react-three/fiber";
 import { BallCollider, RigidBody, type RapierRigidBody } from "@react-three/rapier";
 import * as THREE from "three";
 import { Bodies } from "./Balls";
-import { CONFIG, HOLES } from "../game/config";
+import { CONFIG, safeBombPoint } from "../game/config";
 import { useGame } from "../game/store";
 import { audio } from "../game/audio";
 
@@ -108,11 +108,7 @@ export function Bombs() {
     if (s.status !== "playing" || s.level !== 2 || s.elapsed < next.current) return;
     next.current = s.elapsed + Math.max(CONFIG.spawnMinimum, CONFIG.spawnInitial - s.elapsed * 0.018);
     if (bombs.length >= CONFIG.maxBombs) return;
-    let x = 0, z = 0;
-    for (let i = 0; i < 100; i++) {
-      x = (Math.random() - 0.5) * 15.6; z = (Math.random() - 0.5) * 11.6;
-      if (HOLES.every(h => Math.hypot(x - h.x, z - h.z) > CONFIG.holeRadius + CONFIG.bombRadius)) break;
-    }
+    const { x, z } = safeBombPoint();
     setBombs(b => [...b, { id: `bomb-${s.session}-${++counter.current}`, x, z, born: s.elapsed }]);
   });
   return <>{status === "playing" && bombs.map(b => <Bomb key={b.id} data={b} remove={id => setBombs(list => list.filter(b => b.id !== id))} />)}</>;
