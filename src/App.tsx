@@ -21,6 +21,8 @@ import {
   Trophy,
   HelpCircle,
 } from "lucide-react";
+import { MenuArt, MenuTitleFlower, StartOrnaments } from "./components/MenuArt";
+import { useMenuStart } from "./components/useMenuStart";
 import { Game } from "./components/Game";
 import { useGame } from "./game/store";
 import { COLORS, COLOR_NAMES, CONFIG, LEVELS } from "./game/config";
@@ -67,6 +69,7 @@ function App() {
   const [help, setHelp] = useState(false);
   const data = LEVELS[level - 1];
   const menu = status === "menu";
+  const {starting,start: startFromMenu} = useMenuStart(menu);
   const active = ["playing", "paused", "falling"].includes(status);
   const time = `${Math.floor(elapsed / 60)
     .toString()
@@ -74,7 +77,10 @@ function App() {
     .toString()
     .padStart(2, "0")}`;
   return (
-    <main className={menu ? "app is-menu" : "app is-game"} onPointerDown={() => audio.unlock()}>
+    <main className={menu ? `app is-menu ${starting ? "menu-starting" : ""}` : "app is-game"} onPointerDown={() => audio.unlock()} onClickCapture={e=>{
+      if(starting){e.preventDefault();e.stopPropagation();return;}
+      if(menu&&(e.target as Element).closest('button:not(:disabled)'))audio.menuClick();
+    }}>
       <header className="topbar">
         <a
           className="brand"
@@ -123,18 +129,19 @@ function App() {
       <div className="ambient ambient-one" />
       <div className="ambient ambient-two" />
       {menu && (
-        <aside className="menu-panel">
+        <aside className={`menu-panel menu-view-${view}`} aria-label="主菜单">
+          <MenuArt />
           <div className="eyebrow">
             <span /> A QUIET WORLD. A GOLDEN TRACE.
           </div>
           {view === "main" ? (
             <>
-              <h1>
-                轻推，
-                <br />
-                唤醒<span className="gradient-word">光芒。</span>
-                <span className="title-dot">✦</span>
-              </h1>
+              <div className="menu-title-block">
+                <p className="menu-title-caption"><span/> THE ART OF A LITTLE PUSH</p>
+                <h1 aria-label="推小球闯关">推小球<br/><span className="gradient-word">闯关</span><span className="title-dot" aria-hidden="true">✦</span></h1>
+                <MenuTitleFlower />
+                <p className="menu-title-whisper">轻推，唤醒光芒。</p>
+              </div>
               <p className="intro">
                 推动彩球，精准入洞！
                 <br />
@@ -142,10 +149,14 @@ function App() {
               </p>
               <button
                 className="primary start"
-                onClick={() => useGame.getState().start(1)}
+                aria-label="开始游戏"
+                disabled={starting}
+                onClick={() => startFromMenu(1)}
               >
-                <Play size={19} fill="currentColor" /> 开始游戏{" "}
-                <ArrowUpRight size={21} />
+                <StartOrnaments />
+                <Play className="start-play-icon" size={17} fill="currentColor" aria-hidden="true"/>
+                <span className="start-copy"><b>开始游戏</b><small aria-hidden="true">BEGIN THE JOURNEY</small></span>
+                <ArrowUpRight className="start-arrow" size={19} aria-hidden="true"/>
               </button>
               <div className="menu-actions">
                 <button onClick={() => setView("levels")}>
@@ -161,6 +172,9 @@ function App() {
                     操作说明
                   </span>
                   <ChevronRight size={17} />
+                </button>
+                <button onClick={() => setAudioOpen(!audioOpen)} aria-expanded={audioOpen}>
+                  <span><Volume2 size={17}/>声音设置</span><ChevronRight size={17}/>
                 </button>
               </div>
               <div className="small-achievement">
@@ -195,7 +209,7 @@ function App() {
                       className={`level-card ${i === 1 && !unlocked ? "locked" : ""}`}
                       disabled={i === 1 && !unlocked}
                       key={l.id}
-                      onClick={() => useGame.getState().start(l.id)}
+                      onClick={() => startFromMenu(l.id)}
                     >
                       <span className="level-no">0{l.id}</span>
                       <div>

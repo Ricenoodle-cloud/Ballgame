@@ -1,4 +1,17 @@
-# 推小球闯关 V4 · 白色花语版
+# 推小球闯关 V5 · 艺术主菜单版
+
+V5 仅精修主菜单：保留 V4 的整体梦幻几何风格、场景、平台、建筑、镜头、灯光、球体、玩法、音乐和 HUD。标题突出原游戏名称「推小球闯关」，新增细金色建筑边框、稀疏藤蔓线描和轻微浮动光点；主按钮采用奶油白/香槟金细框、内外阴影、克制的呼吸光泽与悬停/按压反馈，次级按钮统一风格。
+
+## V5 菜单实现
+
+- 复用 `WhiteFlowers` 组件的 `presentation="menu"` 模式，在标题和开始按钮两侧放置三朵同款白花。UI 适配直接投影 V4 的花瓣曲面边界，使用相同三层/20 片配比、开合函数和不同相位，不另画另一种花。
+- 菜单白花使用轻量 SVG 和一个共享的约 10 Hz 动画时钟；没有第二个 WebGL 画布、图片下载或模型重复加载。进入游戏后菜单花朵卸载、时钟停止；减少动画偏好下使用静态花姿。
+- “开始游戏”包含小三角图标、对称几何纹样、两侧白花、短暂金色光点与 220 毫秒轻量过渡。支持防重复触发、Enter 激活、减少动画模式和页面过渡 API 缺失/失败时的备用路径。
+- 轻柔点击音通过现有 SFX 通道播放，遵守原音效开关和音量；没有修改 BGM 的旋律、音色、循环或调度。
+- 关卡选择、操作说明、声音设置、返回和顶部菜单图标保持原功能。已检查桌面、矮窗口、平板与窄屏的显示及点击命中。
+- 所有新增菜单样式限定于 `.is-menu`；原 CSS 保留。实际游戏场景、HUD 和底栏标记未修改。
+
+## 保留的 V4 内容
 
 在 V3 完整游戏上局部增加几何藤蔓围栏和原创白色动态花卉，并放缓炸弹节奏。**V3 的镜头、灯光、天空、建筑布局、平台几何、球体、金色拖尾、音乐、UI 与玩法参数均保留。**新增花朵参考用户图片中的白色/奶油白宽瓣、多层重叠、柔软弯曲与半透明特征，以程序几何重新创作，未使用图片贴图或普通卡通雏菊模型。
 
@@ -14,9 +27,9 @@
 
 ## 下载离线游戏
 
-打开当前分支根目录 `推小球闯关-V4-白色花语版.html`，点击 GitHub 的 **Download raw file**，保存为 `.html`。在 Windows Edge / Chrome 中双击打开。
+打开当前分支根目录 `推小球闯关-V5-艺术主菜单版.html`，点击 GitHub 的 **Download raw file**，保存为 `.html`。在 Windows Edge / Chrome 中双击打开。
 
-所有 JavaScript、CSS、图标、Rapier WASM 和音乐生成程序均内嵌；不需要服务器、CDN 或在线音频。V2 与 V3 的离线 HTML 也保留在仓库中。
+所有 JavaScript、CSS、图标、Rapier WASM 和音乐生成程序均内嵌；不需要服务器、CDN 或在线音频。V2、V3 和 V4 的离线 HTML 也保留在仓库中。
 
 当前测试环境的浏览器管理员策略可能禁止 `file://` 导航。测试脚本会首先尝试直接打开文件，仅在明确收到该策略错误时改用断网浏览器直接载入完整 HTML。实际结果见 `TEST_REPORT.md`；不能把这种替代验证当作 Windows 双击验收。
 
@@ -44,26 +57,28 @@ Node.js 24：
 
 ```sh
 npm install
-npm run dev -- --port 5175
+npm run dev -- --port 5178
 npm test
 npm run build
 npm run export:offline
 ```
 
-输出：`dist-offline/推小球闯关-V4-白色花语版.html`。也可执行 `node scripts/export-offline.mjs "推小球闯关-V4-白色花语版.html"` 指定路径。
+输出：`dist-offline/推小球闯关-V5-艺术主菜单版.html`。也可执行 `node scripts/export-offline.mjs "推小球闯关-V5-艺术主菜单版.html"` 指定路径。
 
 另开终端，在开发服务器运行时执行：
 
 ```sh
 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser
-GAME_URL=http://localhost:5175 CHROMIUM_PATH=/usr/bin/chromium node tests/audio-trail-browser.mjs
+GAME_URL=http://localhost:5178 CHROMIUM_PATH=/usr/bin/chromium npm run test:browser:game
+GAME_URL=http://localhost:5178 CHROMIUM_PATH=/usr/bin/chromium node tests/audio-trail-browser.mjs
 CHROMIUM_PATH=/usr/bin/chromium npm run test:offline
 ```
 
-`GAME_URL` 可覆盖默认 `http://localhost:5175`。音频回归脚本保留供 V3 音乐复查，可通过 `GAME_URL` 指定当前服务，完整乐曲跨越循环边界约两分钟。浏览器需支持 WebGL、Web Audio。调试接口仅存在于开发构建，正式离线包不包含这些接口。
+`GAME_URL` 可覆盖默认 `http://localhost:5178`。音频回归脚本保留供 V3 音乐复查，可通过 `GAME_URL` 指定当前服务，完整乐曲跨越循环边界约两分钟。浏览器需支持 WebGL、Web Audio。调试接口仅存在于开发构建，正式离线包不包含这些接口。
 
 ## 主要文件
 
+- `src/components/MenuArt.tsx` / `MenuFlower.tsx` / `useMenuStart.ts`：菜单几何装饰、共享白花 UI 投影与安全启动过渡。
 - `src/components/Fence.tsx` / `src/game/fence.ts`：几何围栏、藤蔓与连续物理环。
 - `src/components/WhiteFlowers.tsx` / `src/game/flowers.ts`：共享曲面花瓣、实例化层叠花朵与平滑开合。
 - `src/game/bombSchedule.ts`：安全期、慢节奏、暂停不重置的游戏时间调度。

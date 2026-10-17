@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
+import { MenuFlower } from './MenuFlower';
 import { FLOWERS, PETAL_LAYERS, PETALS_PER_FLOWER, createPetalGeometry, flowerOpenness } from '../game/flowers';
 
-export function WhiteFlowers(){
+export function WhiteFlowers({presentation='scene',phase=0}:{presentation?:'scene'|'menu';phase?:number}={}){
+  return presentation==='menu'?<MenuFlower phase={phase}/>:<SceneWhiteFlowers/>;
+}
+function SceneWhiteFlowers(){
   const petals=useRef<THREE.InstancedMesh>(null),farPetals=useRef<THREE.InstancedMesh>(null),centers=useRef<THREE.InstancedMesh>(null),stems=useRef<THREE.InstancedMesh>(null),leaves=useRef<THREE.InstancedMesh>(null),drift=useRef<THREE.InstancedMesh>(null);
   const {gl}=useThree();
   const resources=useMemo(()=>({

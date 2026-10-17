@@ -102,6 +102,14 @@ class GameAudio {
     const notes=kind==='victory'?[72,76,79,84]:kind==='score'?[81,88]:kind==='explosion'?[29,21]:kind==='failed'?[52,47,40]:[54,45];
     notes.forEach((note,i)=>this.note(note,this.context!.currentTime+i*(kind==='victory'?.13:.075),.3,.16,kind==='score'||kind==='victory'?'sine':'triangle',false));
   }
+  // UI-only tap, routed through the existing SFX gain/mute; BGM is unchanged.
+  menuClick(){
+    this.unlock();const ctx=this.context;
+    if(!ctx||!this.settings.sfxEnabled)return;
+    void ctx.resume().then(()=>{
+      if(this.settings.sfxEnabled&&ctx.state==='running')this.note(79,ctx.currentTime,.14,.045,'sine',false);
+    }).catch(()=>{});
+  }
   inspect(){
     const data=new Float32Array(this.analyser?.fftSize??0);this.analyser?.getFloatTimeDomainData(data);
     return {state:this.context?.state??'locked',scheduled:this.scheduled,step:this.step,loop:Math.floor(this.step/MUSIC_STEPS),activeMusicSources:this.sources.size,settings:{...this.settings},rms:data.length?Math.sqrt(data.reduce((a,x)=>a+x*x,0)/data.length):0};
