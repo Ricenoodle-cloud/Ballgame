@@ -12,7 +12,7 @@ html=html.replace(js[0],()=>`<script type="module">${code.replace(/<\/script/gi,
 html=html.replace(css[0],()=>`<style>${style}</style>`);
 const favicon=await readFile(path.join(root,'public/favicon.svg'),'utf8');
 html=html.replace(/href="\/favicon.svg"/,()=>`href="data:image/svg+xml;base64,${Buffer.from(favicon).toString('base64')}"`);
-const output=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'dist-offline/推小球闯关-V4-白色花语版.html');
+const output=process.argv[2]?path.resolve(process.argv[2]):path.join(root,'dist-offline/推小球闯关-V5-艺术主菜单版.html');
 await mkdir(path.dirname(output),{recursive:true});
 await writeFile(output,html);
 console.log(`Offline game: ${output}`);
