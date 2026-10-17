@@ -30,13 +30,15 @@ export const CONFIG = {
   width: 18,
   depth: 18,
   holeRadius: 1.05,
-  spawnInitial: 4,
-  spawnMinimum: 1.5,
+  spawnInitial: 8,
+  spawnMinimum: 5,
+  bombGrace: 6,
+  bombJitter: .35,
   bombWarning: 1.5,
   bombRadius: 0.56,
   blastRadius: 2.4,
   blastImpulse: 4.5,
-  maxBombs: 5,
+  maxBombs: 1,
   maxBalls: 40,
 };
 export const HOLES: { id: string; color: ColorKey; x: number; z: number }[] = [

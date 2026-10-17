@@ -5,6 +5,7 @@ import * as THREE from "three";
 import { Bodies } from "./Balls";
 import { CONFIG, safeBombPoint } from "../game/config";
 import { useGame } from "../game/store";
+import { BombSchedule } from "../game/bombSchedule";
 import { audio } from "../game/audio";
 
 export type BombData = { id: string; x: number; z: number; born: number };
@@ -93,23 +94,21 @@ function Bomb({ data, remove }: { data: BombData; remove: (id: string) => void }
 export function Bombs() {
   const status = useGame(s => s.status);
   const [bombs, setBombs] = useState<BombData[]>([]);
-  const next = useRef(CONFIG.spawnInitial);
+  const schedule = useRef(new BombSchedule());
   const counter = useRef(0);
   if (import.meta.env.DEV) Object.assign(window, { __orbitBombs: {
     count: bombs.length,
-    spawn: (x: number, z: number) => setBombs(list => [...list, { id: `test-${++counter.current}`, x, z, born: useGame.getState().elapsed }]),
+    inspect: () => ({ nextAt: schedule.current.nextAt, count: bombs.length, bombs }),
+    spawn: (x: number, z: number) => setBombs(list => list.length >= CONFIG.maxBombs ? list : [...list, { id: `test-${++counter.current}`, x, z, born: useGame.getState().elapsed }]),
   } });
   useEffect(() => {
-    if (status !== "playing") setBombs([]);
-    next.current = useGame.getState().elapsed + CONFIG.spawnInitial;
+    if (status !== "playing" && status !== "paused") setBombs([]);
   }, [status]);
   useFrame(() => {
     const s = useGame.getState();
-    if (s.status !== "playing" || s.level !== 2 || s.elapsed < next.current) return;
-    next.current = s.elapsed + Math.max(CONFIG.spawnMinimum, CONFIG.spawnInitial - s.elapsed * 0.018);
-    if (bombs.length >= CONFIG.maxBombs) return;
+    if (s.status !== "playing" || s.level !== 2 || !schedule.current.poll(s.elapsed, bombs.length)) return;
     const { x, z } = safeBombPoint();
-    setBombs(b => [...b, { id: `bomb-${s.session}-${++counter.current}`, x, z, born: s.elapsed }]);
+    setBombs(b => b.length >= CONFIG.maxBombs ? b : [...b, { id: `bomb-${s.session}-${++counter.current}`, x, z, born: s.elapsed }]);
   });
-  return <>{status === "playing" && bombs.map(b => <Bomb key={b.id} data={b} remove={id => setBombs(list => list.filter(b => b.id !== id))} />)}</>;
+  return <>{(status === "playing" || status === "paused") && bombs.map(b => <Bomb key={b.id} data={b} remove={id => setBombs(list => list.filter(b => b.id !== id))} />)}</>;
 }

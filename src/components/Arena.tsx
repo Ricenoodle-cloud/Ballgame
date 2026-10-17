@@ -2,6 +2,8 @@ import { useEffect, useMemo } from "react";
 import * as THREE from "three";
 import { RigidBody, TrimeshCollider } from "@react-three/rapier";
 import { COLORS, CONFIG, HOLES } from "../game/config";
+import { WhiteFlowers } from "./WhiteFlowers";
+import { Fence } from "./Fence";
 import { createArenaGeometry } from "../game/arenaGeometry";
 export function Arena() {
   const geo = useMemo(createArenaGeometry, []);
@@ -12,6 +14,8 @@ export function Arena() {
   }, [geo]);
   useEffect(() => () => geo.dispose(), [geo]);
   return <group>
+    <Fence />
+    <WhiteFlowers />
     {/* The SAME perforated circular mesh is used for rendering and physics.
         No cylinder/box collider can span a well or the outside of the disk. */}
     <RigidBody type="fixed" colliders={false} name="circular-arena">
