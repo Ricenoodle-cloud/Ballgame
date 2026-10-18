@@ -62,6 +62,7 @@ function App() {
   const score = useGame((s) => s.score);
   const combo = useGame((s) => s.combo);
   const comboFlashAt = useGame((s) => s.comboFlashAt);
+  const portal = useGame((s) => s.portal);
   const elapsed = useGame((s) => s.elapsed);
   const unlocked = useGame((s) => s.unlocked);
   const cooldown = useGame((s) => s.cooldown);
@@ -302,6 +303,7 @@ function App() {
             <div className={`combo-readout ${comboFlashAt >= 0 && elapsed - comboFlashAt < 1.6 ? "combo-ready" : ""}`} aria-live="polite">
               {comboFlashAt >= 0 && elapsed - comboFlashAt < 1.6 ? "✦ 完美连击" : "连续正确"} ×{combo}
             </div>
+            {portal.active && <div className="portal-readout">幻彩之门 · {portal.color === "blue" ? "蓝色" : portal.color === "red" ? "粉色" : portal.color === "green" ? "绿色" : "黄色"} · 双倍奖励</div>}
           </div>
         )}
         {menu && (

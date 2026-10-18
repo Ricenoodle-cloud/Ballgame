@@ -38,6 +38,7 @@ type State = {
   score: number;
   combo: number;
   comboFlashAt: number;
+  portal: { active:boolean; color:ColorKey; x:number; z:number; expires:number };
   session: number;
   balls: BallData[];
   unlocked: boolean;
@@ -57,6 +58,7 @@ type State = {
   fall: () => void;
   finishFall: () => void;
   spawn: (b: BallData) => void;
+  portalScore: (id:string,color:ColorKey,x:number,z:number) => void;
 };
 let effectId = 0;
 const hitBombs = new Set<string>();
@@ -66,6 +68,7 @@ export const useGame = create<State>((set, get) => ({
   score: 0,
   combo: 0,
   comboFlashAt: -Infinity,
+  portal: {active:false,color:'blue',x:0,z:0,expires:0},
   session: 0,
   balls: initialBalls(),
   unlocked: readUnlock(),
@@ -85,6 +88,7 @@ export const useGame = create<State>((set, get) => ({
       score: 0,
       combo: 0,
       comboFlashAt: -Infinity,
+      portal: {active:false,color:'blue',x:0,z:0,expires:0},
       session: s.session + 1,
       balls: initialBalls(level === 2 ? 32 : 16),
       elapsed: 0,
@@ -101,6 +105,7 @@ export const useGame = create<State>((set, get) => ({
       score: 0,
       combo: 0,
       comboFlashAt: -Infinity,
+      portal: {active:false,color:'blue',x:0,z:0,expires:0},
       effects: [],
       elapsed: 0,
       cooldown: 0,
@@ -197,6 +202,13 @@ export const useGame = create<State>((set, get) => ({
     audio.play("hit");
     set({ score: Math.max(0, s.score - 1), feedback: { id: ++effectId, kind: "wrong", text: "炸弹命中 -1" } });
     s.effect({ x, y: 0.8, z, color: "#ff526a", text: "炸弹命中 -1", kind: "wrong" });
+  },
+  portalScore: (id,color,x,z) => {
+    const s=get();if(s.status!=='playing')return;const ball=s.balls.find(b=>b.id===id);if(!ball||ball.color!==color)return;
+    const score=s.score+2,combo=s.combo+1;audio.play('score');
+    let comboFlashAt=s.comboFlashAt,effects=[...s.effects,{id:++effectId,x,y:.5,z,color:'#e8c77c',text:'+2',kind:'score' as const,born:s.elapsed}];
+    if(combo%3===0){comboFlashAt=s.elapsed;audio.perfectCombo();effects.push({id:++effectId,x:0,y:2.1,z:-1.1,color:'#e7c77e',text:`完美连击 ×${combo}`,kind:'combo' as const,born:s.elapsed});}
+    const won=score>=LEVELS[s.level-1].goal;set({balls:s.balls.filter(b=>b.id!==id),score,combo,comboFlashAt,effects,portal:{...s.portal,active:false},status:won?'victory':s.status,feedback:{id:++effectId,kind:'score',text:'+2'}});
   },
   fall: () => {
     if (get().status === "playing")
