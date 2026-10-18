@@ -1,0 +1,49 @@
+name: Windows Desktop EXE
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, codex/windows-electron-desktop]
+permissions:
+  contents: read
+concurrency:
+  group: windows-desktop-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Build unchanged web edition
+        run: npm run build
+      - name: Test game rules and physics
+        run: npm test
+      - name: Export offline V6 HTML
+        run: npm run export:offline:v6
+      - name: Build installer and portable EXE
+        run: npm run dist:win
+      - name: Smoke test packaged local game
+        run: npm run test:desktop -- --packaged
+      - name: Generate checksums
+        shell: pwsh
+        run: |
+          Get-FileHash release/*-Setup.exe,release/*-Portable.exe -Algorithm SHA256 | Format-List | Out-File release/SHA256.txt -Encoding utf8
+          Copy-Item WINDOWS使用说明.md release/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ballgame-Windows-x64
+          path: |
+            release/*-Setup.exe
+            release/*-Portable.exe
+            release/SHA256.txt
+            release/WINDOWS使用说明.md
+            dist-offline/推小球闯关-V6-风与自由版.html
+          if-no-files-found: error
+          retention-days: 30

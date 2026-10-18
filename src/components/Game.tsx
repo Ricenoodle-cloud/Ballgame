@@ -10,6 +10,7 @@ import { CONFIG, holeAt } from "../game/config";
 import { useGame, type Resolution } from "../game/store";
 import { useInput } from "../game/input";
 import * as THREE from "three";
+import { SkyBirds } from './SkyBirds';
 function Systems() {
   const registry = useMemo(() => ({ player: null, targets: new Map(), session: useGame.getState().session }), []);
   if (import.meta.env.DEV) {
@@ -117,6 +118,7 @@ export function Game() {
       <pointLight position={[8, 6, -8]} color="#f6d7b0" intensity={12} />
       <Suspense fallback={null}>
         <DreamWorld />
+        <SkyBirds />
         <Systems key={session} />
       </Suspense>
       <CameraRig />
