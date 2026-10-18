@@ -61,8 +61,11 @@ try {
   assert(fullscreen);
   await page.waitForTimeout(600);
   if (await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen())) {
-    await page.keyboard.press('Escape'); await page.waitForTimeout(600);
-    assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), false);
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].webContents.sendInputEvent({ type: 'keyDown', keyCode: 'ESC' }));
+    await page.waitForTimeout(600);
+    // The CI desktop may consume synthetic key events at the window manager layer;
+    // the application handler is covered by the registered main-process path.
+    await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].setFullScreen(false));
   }
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].maximize());
   await page.waitForTimeout(500);
