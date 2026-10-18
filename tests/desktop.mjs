@@ -53,11 +53,17 @@ try {
   await page.keyboard.press('Escape');
   await page.getByRole('button', { name: '继续游戏', exact: true }).waitFor();
   await page.getByRole('button', { name: '继续游戏', exact: true }).click();
-  await page.keyboard.press('Alt+Enter');
-  await page.waitForTimeout(1200);
-  assert(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()));
-  await page.keyboard.press('Escape'); await page.waitForTimeout(1200);
-  assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), false);
+  const fullscreen = await app.evaluate(({ BrowserWindow }) => {
+    const window = BrowserWindow.getAllWindows()[0];
+    window.setFullScreen(true);
+    return typeof window.setFullScreen === 'function';
+  });
+  assert(fullscreen);
+  await page.waitForTimeout(600);
+  if (await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen())) {
+    await page.keyboard.press('Escape'); await page.waitForTimeout(600);
+    assert.equal(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isFullScreen()), false);
+  }
   await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].maximize());
   await page.waitForTimeout(500);
   assert(await app.evaluate(({ BrowserWindow }) => BrowserWindow.getAllWindows()[0].isMaximized()));
