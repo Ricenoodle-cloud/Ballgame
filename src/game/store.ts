@@ -1,4 +1,5 @@
 import { audio } from "./audio";
+import { addRecord, readNickname } from './records';
 import { create } from "zustand";
 import {
   CONFIG,
@@ -39,6 +40,7 @@ type State = {
   combo: number;
   comboFlashAt: number;
   portal: { active:boolean; color:ColorKey; x:number; z:number; expires:number };
+  lastRecord: ReturnType<typeof addRecord> | null;
   session: number;
   balls: BallData[];
   unlocked: boolean;
@@ -69,6 +71,7 @@ export const useGame = create<State>((set, get) => ({
   combo: 0,
   comboFlashAt: -Infinity,
   portal: {active:false,color:'blue',x:0,z:0,expires:0},
+  lastRecord: null,
   session: 0,
   balls: initialBalls(),
   unlocked: readUnlock(),
@@ -89,6 +92,7 @@ export const useGame = create<State>((set, get) => ({
       combo: 0,
       comboFlashAt: -Infinity,
       portal: {active:false,color:'blue',x:0,z:0,expires:0},
+      lastRecord: null,
       session: s.session + 1,
       balls: initialBalls(level === 2 ? 32 : 16),
       elapsed: 0,
@@ -106,6 +110,7 @@ export const useGame = create<State>((set, get) => ({
       combo: 0,
       comboFlashAt: -Infinity,
       portal: {active:false,color:'blue',x:0,z:0,expires:0},
+      lastRecord: null,
       effects: [],
       elapsed: 0,
       cooldown: 0,
@@ -183,6 +188,7 @@ export const useGame = create<State>((set, get) => ({
     }
     const impossible =
       !won && score + balls.length < LEVELS[s.level - 1].goal;
+    const lastRecord=won?addRecord(readNickname(),s.level,s.elapsed,score):s.lastRecord;
     set({
       balls,
       score,
@@ -193,6 +199,7 @@ export const useGame = create<State>((set, get) => ({
       status: won ? "victory" : impossible ? "failed" : s.status,
       unlocked,
       reason: impossible ? "剩余彩球不足以达到目标，再试一次吧。" : "",
+      lastRecord,
     });
   },
   bombHit: (id, x, z) => {
@@ -208,7 +215,7 @@ export const useGame = create<State>((set, get) => ({
     const score=s.score+2,combo=s.combo+1;audio.play('score');
     let comboFlashAt=s.comboFlashAt,effects=[...s.effects,{id:++effectId,x,y:.5,z,color:'#e8c77c',text:'+2',kind:'score' as const,born:s.elapsed}];
     if(combo%3===0){comboFlashAt=s.elapsed;audio.perfectCombo();effects.push({id:++effectId,x:0,y:2.1,z:-1.1,color:'#e7c77e',text:`完美连击 ×${combo}`,kind:'combo' as const,born:s.elapsed});}
-    const won=score>=LEVELS[s.level-1].goal;set({balls:s.balls.filter(b=>b.id!==id),score,combo,comboFlashAt,effects,portal:{...s.portal,active:false},status:won?'victory':s.status,feedback:{id:++effectId,kind:'score',text:'+2'}});
+    const won=score>=LEVELS[s.level-1].goal;set({balls:s.balls.filter(b=>b.id!==id),score,combo,comboFlashAt,effects,portal:{...s.portal,active:false},status:won?'victory':s.status,feedback:{id:++effectId,kind:'score',text:'+2'},lastRecord:won?addRecord(readNickname(),s.level,s.elapsed,score):s.lastRecord});
   },
   fall: () => {
     if (get().status === "playing")

@@ -2,7 +2,7 @@ name: Windows Desktop EXE
 on:
   workflow_dispatch:
   push:
-    branches: [main, codex/windows-electron-desktop, codex/v6-wind-and-freedom, codex/v7-geometric-nature, codex/v7.1-camera-composition, codex/v7.2-perfect-combo, codex/v8-prismatic-gate]
+    branches: [main, codex/windows-electron-desktop, codex/v6-wind-and-freedom, codex/v7-geometric-nature, codex/v7.1-camera-composition, codex/v7.2-perfect-combo, codex/v8-prismatic-gate, codex/v9-star-leaderboard]
 permissions:
   contents: read
 concurrency:
@@ -26,7 +26,7 @@ jobs:
       - name: Test game rules and physics
         run: npm test
       - name: Export offline V6 HTML
-        run: npm run export:offline:v8
+        run: npm run export:offline:v9
       - name: Build installer and portable EXE
         run: npm run dist:win
       - name: Smoke test packaged local game
@@ -44,6 +44,6 @@ jobs:
             release/*-Portable.exe
             release/SHA256.txt
             release/WINDOWS使用说明.md
-            dist-offline/推小球闯关-V8-幻彩之门.html
+            dist-offline/推小球闯关-V9-星辰竞速榜.html
           if-no-files-found: error
           retention-days: 30

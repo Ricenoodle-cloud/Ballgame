@@ -19,6 +19,8 @@ async function launch() {
   page.setDefaultTimeout(60000);
   page.on('pageerror', error => errors.push(error.message));
   await page.getByRole('button', { name: '开始游戏', exact: true }).waitFor();
+  const nickname = page.getByLabel('玩家昵称', { exact: true });
+  if (await nickname.count()) await nickname.fill('星河旅人');
   assert(page.url().startsWith('file://'), page.url());
   return page;
 }

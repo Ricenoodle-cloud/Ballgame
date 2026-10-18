@@ -27,6 +27,7 @@ import { Game } from "./components/Game";
 import { useGame } from "./game/store";
 import { COLORS, COLOR_NAMES, CONFIG, LEVELS } from "./game/config";
 import { audio } from "./game/audio";
+import { formatTime, normalizeNickname, readNickname, recordsFor, saveNickname } from "./game/records";
 import { input } from "./game/input";
 class SceneBoundary extends Component<
   { children: ReactNode },
@@ -59,6 +60,9 @@ function App() {
     if (status === "failed") audio.play("failed");
     if (import.meta.env.DEV) Object.assign(window, { __orbitAudio: audio });
   }, [status, level]);
+  const [nickname,setNickname]=useState(readNickname());
+  const [nameError,setNameError]=useState("");
+  const [leaderboardLevel,setLeaderboardLevel]=useState(0);
   const score = useGame((s) => s.score);
   const combo = useGame((s) => s.combo);
   const comboFlashAt = useGame((s) => s.comboFlashAt);
@@ -68,11 +72,13 @@ function App() {
   const cooldown = useGame((s) => s.cooldown);
   const balls = useGame((s) => s.balls.length);
   const reason = useGame((s) => s.reason);
-  const [view, setView] = useState<"main" | "levels" | "help">("main");
+  const recordResult = useGame((s) => s.lastRecord);
+  const [view, setView] = useState<"main" | "levels" | "help" | "leaderboard">("main");
   const [help, setHelp] = useState(false);
   const data = LEVELS[level - 1];
   const menu = status === "menu";
   const {starting,start: startFromMenu} = useMenuStart(menu);
+  const begin=(target:number)=>{const n=normalizeNickname(nickname);if(!n){setNameError('请输入 1～12 个字符的昵称');return;}setNickname(saveNickname(n));setNameError('');startFromMenu(target);};
   const active = ["playing", "paused", "falling"].includes(status);
   const time = `${Math.floor(elapsed / 60)
     .toString()
@@ -154,7 +160,7 @@ function App() {
                 className="primary start"
                 aria-label="开始游戏"
                 disabled={starting}
-                onClick={() => startFromMenu(1)}
+                onClick={() => begin(1)}
               >
                 <StartOrnaments />
                 <Play className="start-play-icon" size={17} fill="currentColor" aria-hidden="true"/>
@@ -162,6 +168,8 @@ function App() {
                 <ArrowUpRight className="start-arrow" size={19} aria-hidden="true"/>
               </button>
               <div className="menu-actions">
+                <label className="nickname-field"><span>留下你的名字，开始挑战</span><input aria-label="玩家昵称" value={nickname} maxLength={12} onChange={e=>{setNickname(e.target.value);setNameError('')}} placeholder="例如：星河旅人" /></label>
+                {nameError && <p className="name-error">{nameError}</p>}
                 <button onClick={() => setView("levels")}>
                   <span>
                     <Target size={17} />
@@ -169,6 +177,7 @@ function App() {
                   </span>
                   <ChevronRight size={17} />
                 </button>
+                <button onClick={() => setView("leaderboard")}><span><Trophy size={17}/>历史排行榜</span><ChevronRight size={17}/></button>
                 <button onClick={() => setView("help")}>
                   <span>
                     <Keyboard size={17} />
@@ -204,15 +213,15 @@ function App() {
                 <ArrowLeft size={16} />
                 返回主菜单
               </button>
-              <h2>{view === "levels" ? "选一场挑战。" : "轻推，巧冲。"}</h2>
-              {view === "levels" ? (
+              <h2>{view === "levels" ? "选一场挑战。" : view === "leaderboard" ? "星辰竞速榜" : "轻推，巧冲。"}</h2>
+              {view === "leaderboard" ? <Leaderboard level={leaderboardLevel} setLevel={setLeaderboardLevel}/> : view === "levels" ? (
                 <div className="level-list">
                   {LEVELS.map((l, i) => (
                     <button
                       className={`level-card ${i === 1 && !unlocked ? "locked" : ""}`}
                       disabled={i === 1 && !unlocked}
                       key={l.id}
-                      onClick={() => startFromMenu(l.id)}
+                      onClick={() => begin(l.id)}
                     >
                       <span className="level-no">0{l.id}</span>
                       <div>
@@ -371,7 +380,7 @@ function App() {
                     <Sparkles size={18} />
                     {level === 1 ? "获得称号：天下无敌" : "双阶段挑战完成"}
                   </div>
-                  <p>漂亮的碰撞，值得这一刻。</p>
+                  <p>玩家昵称：{nickname || "匿名旅人"}<br/>本关用时：{formatTime(elapsed)}<br/>历史排名：第 {recordResult?.rank || "—"} 名{recordResult?.best && <><br/><b className="personal-best">✦ 刷新个人纪录</b></>}</p>
                 </>
               ) : (
                 <p>
@@ -529,6 +538,12 @@ function App() {
       )}
     </main>
   );
+}
+function Leaderboard({level,setLevel}:{level:number;setLevel:(n:number)=>void}){
+  const rows=recordsFor(level);return <section className="leaderboard-panel">
+    <div className="leaderboard-tabs"><button className={level===0?'active':''} onClick={()=>setLevel(0)}>全部关卡</button>{LEVELS.map(l=><button key={l.id} className={level===l.id?'active':''} onClick={()=>setLevel(l.id)}>第 {l.id} 关</button>)}</div>
+    {rows.length===0?<div className="leaderboard-empty"><Trophy size={30}/><p>完成一次挑战，就能留下你的第一份纪录</p><small>成绩只保存在当前浏览器或设备</small></div>:<div className="leaderboard-list"><div className="leaderboard-head"><span>排名</span><span>昵称</span><span>用时</span><span>日期</span></div>{rows.slice(0,100).map((r,i)=><div className={`leader-row ${i<3?'podium':''}`} key={r.id}><b>{i+1}</b><span>{r.nickname}</span><strong>{formatTime(r.timeMs)}</strong><small>{new Date(r.date).toLocaleDateString()}</small></div>)}</div>}
+  </section>;
 }
 function Instructions() {
   return (

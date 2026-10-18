@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import { normalizeNickname, rankCompare, formatTime } from '../src/game/records';
+test('nickname and race ranking rules are deterministic',()=>{assert.equal(normalizeNickname('  星河旅人!!  '),'星河旅人');assert.equal(normalizeNickname('abcdefghijklmnop'),'abcdefghijkl');const a={timeMs:1000,score:2,date:'2026-01-02'} as any,b={timeMs:1000,score:1,date:'2026-01-01'} as any;assert.ok(rankCompare(a,b)<0);assert.equal(formatTime(601000),'10:01');});
