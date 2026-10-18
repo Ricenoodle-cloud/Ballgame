@@ -27,7 +27,7 @@ import { Game } from "./components/Game";
 import { useGame } from "./game/store";
 import { COLORS, COLOR_NAMES, CONFIG, LEVELS } from "./game/config";
 import { audio } from "./game/audio";
-import { addRecord, formatTime, normalizeNickname, readNickname, recordsFor, saveNickname, type RunRecord } from "./game/records";
+import { formatTime, normalizeNickname, readNickname, recordsFor, saveNickname } from "./game/records";
 import { input } from "./game/input";
 class SceneBoundary extends Component<
   { children: ReactNode },
@@ -53,7 +53,6 @@ function App() {
   const [audioOpen, setAudioOpen] = useState(false);
   const updateAudio = (patch: Partial<typeof audioSettings>) => { audio.configure(patch); setAudioSettings({...audio.settings}); };
   const status = useGame((s) => s.status);
-  const session = useGame((s) => s.session);
   const level = useGame((s) => s.level);
   useEffect(() => {
     audio.setScene(level, status);
@@ -64,8 +63,6 @@ function App() {
   const [nickname,setNickname]=useState(readNickname());
   const [nameError,setNameError]=useState("");
   const [leaderboardLevel,setLeaderboardLevel]=useState(0);
-  const recorded=useState(()=>({session:-1}))[0];
-  const [recordResult,setRecordResult]=useState<null|ReturnType<typeof addRecord>>(null);
   const score = useGame((s) => s.score);
   const combo = useGame((s) => s.combo);
   const comboFlashAt = useGame((s) => s.comboFlashAt);
@@ -75,7 +72,7 @@ function App() {
   const cooldown = useGame((s) => s.cooldown);
   const balls = useGame((s) => s.balls.length);
   const reason = useGame((s) => s.reason);
-  useEffect(()=>{if(status==='playing')setRecordResult(null);if(status==='victory'&&recorded.session!==session){recorded.session=session;setRecordResult(addRecord(nickname,level,elapsed,score));}},[status,session,level,elapsed,score,nickname,recorded]);
+  const recordResult = useGame((s) => s.lastRecord);
   const [view, setView] = useState<"main" | "levels" | "help" | "leaderboard">("main");
   const [help, setHelp] = useState(false);
   const data = LEVELS[level - 1];
