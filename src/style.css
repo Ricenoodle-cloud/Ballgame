@@ -1447,3 +1447,9 @@ button:focus-visible,a:focus-visible { outline-color:#ba9560; }
  .is-menu .menu-panel {top:15%;}.is-menu .menu-title-whisper {margin-bottom:9px;}.is-menu .intro {margin-bottom:13px;}.is-menu .small-achievement {margin-top:10px;padding-top:10px;gap:9px;}.is-menu .achievement-icon {width:28px;height:28px;}.is-menu .small-achievement p {margin-top:4px;font-size:9px;}.is-menu .menu-note {display:none;}
 }
 .is-menu .primary.start:is(:hover,:focus-visible):not(:disabled) {background:linear-gradient(120deg,#fffdf6,#f6e8ca 65%,#fff6e3);}
+
+/* V8 final HUD override: fixed upper-left placement after legacy responsive rules. */
+.is-game .scoreboard { position:absolute; left:22px; right:auto; top:20px; transform:none; width:235px; padding:12px 16px; font-weight:700; background:#fff9eff0; border:1px solid #bd9a63aa; box-shadow:0 6px 25px #89738928; }
+.is-game .scoreboard > div > span,.is-game .scoreboard p { font-weight:700; }
+.is-game .scoreboard b { font-weight:800; }
+@media (max-width:720px) { .is-game .scoreboard { left:12px; top:14px; width:205px; padding:9px 12px; } }
