@@ -29,9 +29,8 @@ function createWindow() {
       win.setFullScreen(false);
     }
   });
+  win.webContents.on('did-finish-load', () => win.setTitle('推小球闯关'));
   win.loadFile(page);
-  // Keep the desktop chrome title stable while preserving the web page's own title.
-  win.setTitle('推小球闯关');
 }
 app.whenReady().then(() => {
   Menu.setApplicationMenu(null);
