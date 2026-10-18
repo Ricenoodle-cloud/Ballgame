@@ -20,8 +20,7 @@
     "build:desktop": "tsc -b && vite build --base ./ --outDir dist-desktop && node scripts/check-desktop.mjs",
     "desktop": "electron .",
     "dist:win": "npm run build:desktop && electron-builder --config electron-builder.config.cjs --win --x64 --publish never",
-    "test:desktop": "node tests/desktop.mjs",
-    "export:offline:v8": "npm run build && node scripts/export-offline.mjs dist-offline/推小球闯关-V8-幻彩之门.html"
+    "test:desktop": "node tests/desktop.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.0",
