@@ -835,6 +835,23 @@ kbd {
 .combo-readout.combo-ready { color:#b18a43; text-shadow:0 0 12px #e8c97888; }
 .combo-float { color:#d5ad5b !important; letter-spacing:1px; }
 .portal-readout { margin-top:3px; color:#8a7e99; font-size:10px; letter-spacing:.3px; opacity:.9; }
+.nickname-field { display:flex; flex-direction:column; gap:5px; margin:10px auto 3px; width:min(280px,80%); color:#7d7085; font-size:11px; font-weight:700; text-align:left; }
+.nickname-field input { border:1px solid #c4aa7c99; background:#fffaf2cc; border-radius:10px; padding:9px 12px; color:#65576f; font:700 13px Georgia,serif; outline:none; }
+.nickname-field input:focus { border-color:#b9924f; box-shadow:0 0 0 3px #d8b87130; }
+.name-error { color:#b85d70; font-size:11px; margin:3px 0; }
+.leaderboard-panel { width:min(430px,92%); margin:0 auto; }
+.leaderboard-tabs { display:flex; gap:5px; justify-content:center; margin:12px 0; flex-wrap:wrap; }
+.leaderboard-tabs button { border:1px solid #c7ae83aa; background:#fffaf2aa; color:#786a7f; border-radius:12px; padding:6px 10px; font-size:10px; cursor:pointer; }
+.leaderboard-tabs button.active { background:#e4c98e; color:#5e5266; font-weight:800; }
+.leaderboard-head,.leader-row { display:grid; grid-template-columns:42px 1fr 90px 82px; gap:6px; align-items:center; text-align:left; }
+.leaderboard-head { color:#9a897f; font-size:10px; padding:5px 10px; }
+.leader-row { background:#fffaf2b8; border:1px solid #d5c3aa66; border-radius:10px; padding:8px 10px; margin:4px 0; color:#6e6273; font-size:11px; }
+.leader-row.podium b { color:#b18a43; font-size:16px; }
+.leader-row strong { color:#806638; font-size:13px; }
+.leader-row small { color:#9a8d98; font-size:9px; }
+.leaderboard-empty { text-align:center; color:#8b7d8c; padding:28px 10px; }
+.leaderboard-empty p { font-weight:700; }.leaderboard-empty small { font-size:10px; }
+.personal-best { color:#b18a43; }
 /* V8: quiet upper-left HUD keeps the enlarged arena unobstructed. */
 .is-game .scoreboard { left:22px; top:20px; transform:none; width:235px; padding:12px 16px; background:#fff9eff0; border:1px solid #bd9a63aa; box-shadow:0 6px 25px #89738928; }
 .is-game .scoreboard > div > span,.is-game .scoreboard p { font-weight:700; }
