@@ -11,6 +11,7 @@ import { useGame, type Resolution } from "../game/store";
 import { useInput } from "../game/input";
 import * as THREE from "three";
 import { SkyBirds } from './SkyBirds';
+import { CAMERA, cameraOffset, cameraZoom } from '../game/camera';
 function Systems() {
   const registry = useMemo(() => ({ player: null, targets: new Map(), session: useGame.getState().session }), []);
   if (import.meta.env.DEV) {
@@ -70,23 +71,26 @@ function Systems() {
         ))}
       </Physics>
       <Effects />
+      <CameraRig registry={registry} />
     </Bodies.Provider>
   );
 }
-function CameraRig() {
+function CameraRig({registry}:{registry:{player:import('@react-three/rapier').RapierRigidBody|null}}) {
   const { camera, size } = useThree();
   const desired = useMemo(() => new THREE.Vector3(), []);
+  const target = useMemo(() => new THREE.Vector3(), []);
+  const follow = useMemo(() => new THREE.Vector2(), []);
   useFrame(({ clock }, dt) => {
     const aspect = size.width / size.height;
-    const zoom = Math.max(1, 1.4 / aspect);
+    const zoom = cameraZoom(aspect);
     const s = useGame.getState();
-    const shake =
-      s.status === "playing" && s.cooldown > 1.35
-        ? Math.sin(clock.elapsedTime * 80) * 0.035
-        : 0;
-    desired.set(shake, 20 * zoom, 20.5 * zoom);
+    const player=registry.player;
+    const p=player?.translation();
+    const wanted=s.status==='playing'&&p?cameraOffset(p.x,p.z,s.cooldown>1.35):{x:0,z:0};
+    follow.lerp(new THREE.Vector2(wanted.x,wanted.z),1-Math.exp(-dt*3.8));
+    desired.set(follow.x, CAMERA.baseY*zoom, CAMERA.baseZ*zoom+follow.y);
     camera.position.lerp(desired, Math.min(1, dt * 5));
-    camera.lookAt(0, -0.2, 0);
+    target.set(follow.x,-0.2,follow.y);camera.lookAt(target);
   });
   return null;
 }
@@ -121,7 +125,6 @@ export function Game() {
         <SkyBirds />
         <Systems key={session} />
       </Suspense>
-      <CameraRig />
     </Canvas>
   );
 }
