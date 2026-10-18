@@ -11,7 +11,11 @@
     "export:offline": "npm run build && node scripts/export-offline.mjs",
     "test:browser": "node tests/browser-menu-v5.mjs",
     "test:offline": "node tests/offline-browser.mjs",
-    "test:browser:game": "node tests/browser-v4.mjs"
+    "test:browser:game": "node tests/browser-v4.mjs",
+    "build:desktop": "tsc -b && vite build --base ./ --outDir dist-desktop && node scripts/check-desktop.mjs",
+    "desktop": "electron .",
+    "dist:win": "npm run build:desktop && electron-builder --config electron-builder.config.cjs --win --x64 --publish never",
+    "test:desktop": "node tests/desktop.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.0",
@@ -29,6 +33,8 @@
     "@types/react-dom": "^19.1.9",
     "@types/three": "^0.180.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "electron": "44.9.0",
+    "electron-builder": "26.15.3",
     "playwright": "^1.64.1",
     "tsx": "^4.20.6",
     "typescript": "~5.9.2",
@@ -36,5 +42,8 @@
   },
   "engines": {
     "node": "24.x"
-  }
+  },
+  "main": "electron/main.cjs",
+  "description": "推小球闯关：梦幻几何物理游戏",
+  "author": "Ballgame contributors"
 }
