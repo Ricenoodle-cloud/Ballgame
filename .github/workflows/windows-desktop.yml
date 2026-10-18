@@ -26,7 +26,7 @@ jobs:
       - name: Test game rules and physics
         run: npm test
       - name: Export offline V6 HTML
-        run: npm run export:offline:v6
+        run: npm run export:offline:v7
       - name: Build installer and portable EXE
         run: npm run dist:win
       - name: Smoke test packaged local game
@@ -44,6 +44,6 @@ jobs:
             release/*-Portable.exe
             release/SHA256.txt
             release/WINDOWS使用说明.md
-            dist-offline/推小球闯关-V6-风与自由版.html
+            dist-offline/推小球闯关-V7-几何自然版.html
           if-no-files-found: error
           retention-days: 30

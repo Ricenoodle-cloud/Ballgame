@@ -5,6 +5,7 @@ import { COLORS, CONFIG, HOLES } from "../game/config";
 import { WhiteFlowers } from "./WhiteFlowers";
 import { Fence } from "./Fence";
 import { createArenaGeometry } from "../game/arenaGeometry";
+import { NatureElements } from './NatureElements';
 export function Arena() {
   const geo = useMemo(createArenaGeometry, []);
   const collision = useMemo(() => {
@@ -16,6 +17,7 @@ export function Arena() {
   return <group>
     <Fence />
     <WhiteFlowers />
+    <NatureElements />
     {/* The SAME perforated circular mesh is used for rendering and physics.
         No cylinder/box collider can span a well or the outside of the disk. */}
     <RigidBody type="fixed" colliders={false} name="circular-arena">
