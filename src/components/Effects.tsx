@@ -9,7 +9,7 @@ function Burst({ effect }: { effect: Effect }) {
   const cleaned = useRef(false);
   const particles = useMemo(
     () =>
-      Array.from({ length: effect.kind === "explosion" ? 32 : effect.kind === "score" ? 18 : 8 }, (_, i) => {
+      Array.from({ length: effect.kind === "explosion" ? 32 : effect.kind === "score" ? 18 : effect.kind === "combo" ? 12 : 8 }, (_, i) => {
         const angle = i * 2.399;
         return new THREE.Vector3(
           Math.cos(angle) * (1 + (i % 3) * 0.4),
@@ -46,11 +46,12 @@ function Burst({ effect }: { effect: Effect }) {
         </mesh>
       ))}
       {effect.kind === "explosion" && <Shockwave />}
+      {effect.kind === "combo" && <ComboRosette />}
       {effect.kind === "wrong" && <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.02 - effect.y, 0]}><ringGeometry args={[1.05, 1.28, 40]} /><meshBasicMaterial color="#ff244c" transparent opacity={0.8} /></mesh>}
       {effect.text && (
         <Html center position={[0, 1.2, 0]}>
           <span
-            className={`score-float ${effect.kind === "wrong" ? "wrong" : ""}`}
+            className={`score-float ${effect.kind === "wrong" ? "wrong" : ""} ${effect.kind === "combo" ? "combo-float" : ""}`}
             style={{ color: effect.kind === "score" ? "#a37c32" : effect.color }}
           >
             {effect.text}
@@ -97,4 +98,9 @@ function Shockwave() {
     (ref.current.material as THREE.MeshBasicMaterial).opacity = Math.max(0, 0.8 - age.current);
   });
   return <mesh ref={ref} rotation={[-Math.PI / 2, 0, 0]}><ringGeometry args={[0.8, 1, 40]} /><meshBasicMaterial color="#ffb14e" transparent opacity={0.8} depthWrite={false} /></mesh>;
+}
+function ComboRosette(){
+  const ref=useRef<THREE.Group>(null);const age=useRef(0);
+  useFrame((_,dt)=>{if(useGame.getState().status==='paused')return;age.current+=dt;if(ref.current){const p=Math.min(1,age.current/1.5);ref.current.scale.setScalar(.65+p*.8);ref.current.rotation.y=age.current*.35;ref.current.children.forEach((c,i)=>{c.rotation.z=i*Math.PI/4;});}});
+  return <group ref={ref} rotation={[-Math.PI/2,0,0]} position={[0,.15,0]}>{Array.from({length:8},(_,i)=><mesh key={i} position={[Math.cos(i*Math.PI/4)*.5,Math.sin(i*Math.PI/4)*.5,0]}><planeGeometry args={[.38,.025]} /><meshBasicMaterial color="#e7c77e" transparent opacity={.7} depthWrite={false}/></mesh>)}</group>;
 }

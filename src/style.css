@@ -831,6 +831,9 @@ kbd {
 .score-float.wrong {
   font-size: 11px;
 }
+.combo-readout { margin-top:5px; color:#7d7085; font-size:11px; letter-spacing:.4px; text-align:center; }
+.combo-readout.combo-ready { color:#b18a43; text-shadow:0 0 12px #e8c97888; }
+.combo-float { color:#d5ad5b !important; letter-spacing:1px; }
 .drop-warning {
   color: #c5dcff;
   background: #1b2e50bb;

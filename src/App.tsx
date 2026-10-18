@@ -60,8 +60,10 @@ function App() {
     if (import.meta.env.DEV) Object.assign(window, { __orbitAudio: audio });
   }, [status, level]);
   const score = useGame((s) => s.score);
-  const unlocked = useGame((s) => s.unlocked);
+  const combo = useGame((s) => s.combo);
+  const comboFlashAt = useGame((s) => s.comboFlashAt);
   const elapsed = useGame((s) => s.elapsed);
+  const unlocked = useGame((s) => s.unlocked);
   const cooldown = useGame((s) => s.cooldown);
   const balls = useGame((s) => s.balls.length);
   const reason = useGame((s) => s.reason);
@@ -297,6 +299,9 @@ function App() {
               {feedback.text || data.en}
               <span>{Math.round((score / data.goal) * 100)}%</span>
             </p>
+            <div className={`combo-readout ${comboFlashAt >= 0 && elapsed - comboFlashAt < 1.6 ? "combo-ready" : ""}`} aria-live="polite">
+              {comboFlashAt >= 0 && elapsed - comboFlashAt < 1.6 ? "✦ 完美连击" : "连续正确"} ×{combo}
+            </div>
           </div>
         )}
         {menu && (

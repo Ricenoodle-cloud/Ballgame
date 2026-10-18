@@ -16,7 +16,7 @@ export type Effect = {
   z: number;
   color: string;
   text?: string;
-  kind: "score" | "wrong" | "dash" | "hit" | "spawn" | "win" | "explosion";
+  kind: "score" | "wrong" | "dash" | "hit" | "spawn" | "win" | "explosion" | "combo";
   born: number;
 };
 export type Resolution = {
@@ -36,6 +36,8 @@ type State = {
   status: Status;
   level: number;
   score: number;
+  combo: number;
+  comboFlashAt: number;
   session: number;
   balls: BallData[];
   unlocked: boolean;
@@ -62,6 +64,8 @@ export const useGame = create<State>((set, get) => ({
   status: "menu",
   level: 1,
   score: 0,
+  combo: 0,
+  comboFlashAt: -Infinity,
   session: 0,
   balls: initialBalls(),
   unlocked: readUnlock(),
@@ -79,6 +83,8 @@ export const useGame = create<State>((set, get) => ({
       status: "playing",
       level,
       score: 0,
+      combo: 0,
+      comboFlashAt: -Infinity,
       session: s.session + 1,
       balls: initialBalls(level === 2 ? 32 : 16),
       elapsed: 0,
@@ -93,6 +99,8 @@ export const useGame = create<State>((set, get) => ({
       balls: initialBalls(),
       session: s.session + 1,
       score: 0,
+      combo: 0,
+      comboFlashAt: -Infinity,
       effects: [],
       elapsed: 0,
       cooldown: 0,
@@ -131,13 +139,20 @@ export const useGame = create<State>((set, get) => ({
     let score = s.score;
     const effects = [...s.effects];
     let feedback = s.feedback;
+    let combo = s.combo;
+    let comboFlashAt = s.comboFlashAt;
     const balls = s.balls.filter((b) => {
       const r = unique.get(b.id);
       if (!r) return true;
       const correct = r.holeColor === b.color;
       if (r.holeColor) {
         score = Math.max(0, score + (correct ? 1 : -1));
+        combo = correct ? combo + 1 : 0;
         audio.play(correct ? "score" : "wrong");
+        if(correct && combo%3===0){
+          comboFlashAt=s.elapsed;audio.perfectCombo();
+          effects.push({id:++effectId,x:0,y:2.1,z:-1.1,color:'#e7c77e',text:`完美连击 ×${combo}`,kind:'combo',born:s.elapsed});
+        }
         feedback = { id: ++effectId, kind: correct ? "score" : "wrong", text: correct ? "+1" : "-1" };
       }
       if (r.holeColor)
@@ -166,6 +181,8 @@ export const useGame = create<State>((set, get) => ({
     set({
       balls,
       score,
+      combo,
+      comboFlashAt,
       feedback,
       effects,
       status: won ? "victory" : impossible ? "failed" : s.status,
@@ -183,7 +200,7 @@ export const useGame = create<State>((set, get) => ({
   },
   fall: () => {
     if (get().status === "playing")
-      set({ status: "falling", reason: "你的球掉入了洞口或离开了平台。" });
+      set({ status: "falling", combo: 0, reason: "你的球掉入了洞口或离开了平台。" });
   },
   finishFall: () => {
     if (get().status === "falling") set({ status: "failed" });
