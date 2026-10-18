@@ -6,6 +6,7 @@ import { WhiteFlowers } from "./WhiteFlowers";
 import { Fence } from "./Fence";
 import { createArenaGeometry } from "../game/arenaGeometry";
 import { NatureElements } from './NatureElements';
+import { PrismaticPortal } from './PrismaticPortal';
 export function Arena() {
   const geo = useMemo(createArenaGeometry, []);
   const collision = useMemo(() => {
@@ -18,6 +19,7 @@ export function Arena() {
     <Fence />
     <WhiteFlowers />
     <NatureElements />
+    <PrismaticPortal />
     {/* The SAME perforated circular mesh is used for rendering and physics.
         No cylinder/box collider can span a well or the outside of the disk. */}
     <RigidBody type="fixed" colliders={false} name="circular-arena">

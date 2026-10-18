@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import { PORTAL, portalAt, portalSafe } from '../src/game/portal';
+test('portal cadence and safe architectural positions are bounded',()=>{assert.equal(PORTAL.first,8);assert.equal(PORTAL.duration,12);for(let i=0;i<8;i++){const p=portalAt(i);assert.ok(portalSafe(p.x,p.z));assert.ok(['red','blue','green','yellow'].includes(p.color));}});
