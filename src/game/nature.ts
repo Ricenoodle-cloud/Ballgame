@@ -1,6 +1,6 @@
 import { CONFIG, HOLES } from './config';
-export const PUDDLES=[{x:-1.8,z:-2.1,r:.72},{x:2.1,z:1.65,r:.62},{x:-2.9,z:2.15,r:.58},{x:1.1,z:-3.1,r:.5}] as const;
-export const GRASS=[{x:-2.6,z:-.65},{x:2.65,z:-.8},{x:-.9,z:3.0},{x:3.0,z:-2.65},{x:-3.3,z:-2.7}] as const;
+export const PUDDLES=[{x:-1.8,z:-2.1,r:.72},{x:2.1,z:1.65,r:.62},{x:-2.9,z:1.3,r:.58},{x:1.1,z:-3.1,r:.5}] as const;
+export const GRASS=[{x:-2.6,z:-.65},{x:2.65,z:-.8},{x:-.9,z:3.0},{x:2.8,z:-1.9},{x:-2.2,z:-2.4}] as const;
 export const WATER_TRACE_LIFE=5;
 export const BUTTERFLY_LIFE=4.2;
 export function safeNaturePoint(x:number,z:number,r=.5){return Math.hypot(x,z)<CONFIG.arenaRadius-1&&HOLES.every(h=>Math.hypot(h.x-x,h.z-z)>CONFIG.holeRadius+1.1);}
