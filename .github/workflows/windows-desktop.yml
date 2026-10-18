@@ -2,7 +2,7 @@ name: Windows Desktop EXE
 on:
   workflow_dispatch:
   push:
-    branches: [main, codex/windows-electron-desktop]
+    branches: [main, codex/windows-electron-desktop, codex/v6-wind-and-freedom]
 permissions:
   contents: read
 concurrency:
