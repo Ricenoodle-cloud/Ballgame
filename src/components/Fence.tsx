@@ -1,8 +1,10 @@
-import { useEffect, useMemo, useRef } from 'react';
+import { useContext, useEffect, useMemo, useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { CuboidCollider, RigidBody } from '@react-three/rapier';
 import * as THREE from 'three';
-import { FENCE, fenceSegments } from '../game/fence';
+import { FENCE, fenceAssistImpulse, fenceSegments, FENCE_MATERIAL } from '../game/fence';
+import { Bodies } from './Balls';
+import { CONFIG } from '../game/config';
 const POSTS=40;
 export function Fence(){
   const segments=useMemo(fenceSegments,[]);
@@ -26,13 +28,33 @@ export function Fence(){
   },[]);
   return <group name="geometric-vine-fence">
     <RigidBody type="fixed" colliders={false} name="continuous-fence">
-      {segments.map((s,i)=><CuboidCollider key={i} position={[s.x,FENCE.height/2-.04,s.z]} rotation={[0,s.rotation,0]} args={[s.halfLength,FENCE.height/2,FENCE.halfThickness]} friction={.25} restitution={.3} />)}
+      {segments.map((s,i)=><CuboidCollider key={i} position={[s.x,FENCE.height/2-.04,s.z]} rotation={[0,s.rotation,0]} args={[s.halfLength,FENCE.height/2,FENCE.halfThickness]} friction={FENCE_MATERIAL.friction} restitution={FENCE_MATERIAL.restitution} />)}
     </RigidBody>
     <instancedMesh ref={posts} args={[undefined,undefined,POSTS]} castShadow><cylinderGeometry args={[1,1,1,6]} /><meshStandardMaterial roughness={.85} color="#fff8ed" /></instancedMesh>
     <instancedMesh ref={caps} args={[undefined,undefined,POSTS]}><sphereGeometry args={[1,6,3]} /><meshStandardMaterial color="#efe0c5" roughness={.8} /></instancedMesh>
     <instancedMesh ref={rails} args={[undefined,undefined,POSTS*2]}><boxGeometry args={[1,1,1]} /><meshStandardMaterial color="#d7c09d" roughness={.85} /></instancedMesh>
     <Vines />
+    <FenceAssist />
   </group>;
+}
+function FenceAssist(){
+  const registry=useContext(Bodies),last=useRef(new WeakMap<object,number>());
+  useFrame(({clock})=>{
+    const now=clock.elapsedTime;
+    const bodies=[registry.player,...registry.targets.values()];
+    for(const rb of bodies){
+      if(!rb)continue;
+      const p=rb.translation(),v=rb.linvel(),imp=fenceAssistImpulse(p.x,p.z,v.x,v.z);
+      if(!imp.x&&!imp.z)continue;
+      const previous=last.current.get(rb)??-Infinity;
+      if(now-previous<.12)continue;
+      last.current.set(rb,now);
+      rb.applyImpulse({x:imp.x,y:0,z:imp.z},true);
+      const next=rb.linvel(),speed=Math.hypot(next.x,next.z);
+      if(speed>CONFIG.maxSpeed*1.18)rb.setLinvel({x:next.x*CONFIG.maxSpeed*1.18/speed,y:next.y,z:next.z*CONFIG.maxSpeed*1.18/speed},true);
+    }
+  });
+  return null;
 }
 function Vines(){
   const leaves=useRef<THREE.InstancedMesh>(null);
