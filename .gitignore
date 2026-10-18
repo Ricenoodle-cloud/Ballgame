@@ -10,3 +10,6 @@ output/
 !.env.example
 *.log
 .DS_Store
+
+dist-desktop/
+release/
