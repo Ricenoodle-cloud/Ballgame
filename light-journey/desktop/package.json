@@ -1,0 +1,11 @@
+{
+  "name":"light-journey-desktop",
+  "version":"1.0.0",
+  "description":"Light Journey: ten atmospheric 3D puzzles",
+  "author":"Ricenoodle-cloud",
+  "private":true,
+  "main":"main.cjs",
+  "scripts":{"prepare:game":"node prepare-game.cjs","build:win":"npm run prepare:game && electron-builder --win portable --x64 --publish never"},
+  "devDependencies":{"electron":"39.2.7","electron-builder":"26.0.12"},
+  "build":{"appId":"com.ricenoodle.lightjourney","productName":"Light Journey","asar":true,"directories":{"output":"release"},"files":["main.cjs","app/index.html","package.json"],"win":{"target":[{"target":"portable","arch":["x64"]}],"artifactName":"Light-Journey-Windows.exe","signAndEditExecutable":false},"portable":{"artifactName":"Light-Journey-Windows.exe"}}
+}
