@@ -1,0 +1,61 @@
+name: Light Journey Windows EXE
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'light-journey/Light-Journey.html'
+      - 'light-journey/desktop/**'
+      - '.github/workflows/light-journey-windows.yml'
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: light-journey/desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install desktop builder
+        run: npm install --no-audit --no-fund
+      - name: Build offline portable Windows executable
+        run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify packaged game and executable
+        shell: pwsh
+        run: |
+          if (!(Test-Path release/Light-Journey-Windows.exe)) { throw 'EXE missing' }
+          if ((Get-Item release/Light-Journey-Windows.exe).Length -lt 10000000) { throw 'EXE unexpectedly small' }
+          $exe = Start-Process -FilePath release/Light-Journey-Windows.exe -PassThru
+          Start-Sleep -Seconds 18
+          $exe.Refresh()
+          if ($exe.HasExited) { throw 'Portable EXE exited during smoke check' }
+          Get-Process | Where-Object { $_.ProcessName -like '*Light*Journey*' } | Stop-Process -Force -ErrorAction SilentlyContinue
+          Stop-Process -Id $exe.Id -Force -ErrorAction SilentlyContinue
+          (Get-FileHash release/Light-Journey-Windows.exe -Algorithm SHA256).Hash | Set-Content release/SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Light-Journey-Windows
+          path: |
+            light-journey/desktop/release/Light-Journey-Windows.exe
+            light-journey/desktop/release/SHA256.txt
+            light-journey/desktop/app/index.html
+      - name: Publish public direct downloads
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          Copy-Item app/index.html release/Light-Journey-Offline.html
+          gh release view light-journey-v1.0.0 --repo $env:GITHUB_REPOSITORY 2>$null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create light-journey-v1.0.0 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Light Journey Windows 1.0.0" --notes "Ten-level offline Windows x64 portable game. Download and run Light-Journey-Windows.exe. No account or network needed to play. Also includes an offline single HTML version."
+            if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
+          }
+          gh release upload light-journey-v1.0.0 release/Light-Journey-Windows.exe release/Light-Journey-Offline.html release/SHA256.txt --repo $env:GITHUB_REPOSITORY --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
