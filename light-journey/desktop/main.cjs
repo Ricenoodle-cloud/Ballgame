@@ -1,0 +1,4 @@
+const {app,BrowserWindow,session}=require('electron');
+const path=require('node:path');
+function createWindow(){const win=new BrowserWindow({width:1280,height:850,minWidth:700,minHeight:600,backgroundColor:'#e8e9e7',autoHideMenuBar:true,title:'光的旅程',webPreferences:{contextIsolation:true,nodeIntegration:false,sandbox:true}});win.setMenu(null);win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());win.loadFile(path.join(__dirname,'app','index.html'));}
+app.whenReady().then(()=>{session.defaultSession.setPermissionRequestHandler((webContents,permission,callback)=>callback(false));createWindow();app.on('activate',()=>{if(!BrowserWindow.getAllWindows().length)createWindow()})});app.on('window-all-closed',()=>{if(process.platform!=='darwin')app.quit()});
