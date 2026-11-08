@@ -27,6 +27,17 @@ jobs:
         run: npm run build:win
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Verify real renderer music and sound signals
+        shell: pwsh
+        run: |
+          $report = Join-Path $env:RUNNER_TEMP 'light-journey-audio.json'
+          $test = Start-Process -FilePath 'release/win-unpacked/Light Journey.exe' -ArgumentList "--audio-self-test=$report" -PassThru
+          if (!$test.WaitForExit(60000)) { $test.Kill(); throw 'Audio self-test timed out' }
+          if (!(Test-Path $report)) { throw 'Audio report missing' }
+          Get-Content $report
+          Copy-Item $report release/audio-test.json
+          $result = Get-Content $report -Raw | ConvertFrom-Json
+          if (!$result.pass) { throw 'Renderer audio signal validation failed' }
       - name: Verify packaged game and executable
         shell: pwsh
         run: |
@@ -45,6 +56,7 @@ jobs:
           path: |
             light-journey/desktop/release/Light-Journey-Windows.exe
             light-journey/desktop/release/SHA256.txt
+            light-journey/desktop/release/audio-test.json
             light-journey/desktop/app/index.html
       - name: Publish public direct downloads
         shell: pwsh
@@ -52,10 +64,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           Copy-Item app/index.html release/Light-Journey-Offline.html
-          gh release view light-journey-v1.0.0 --repo $env:GITHUB_REPOSITORY 2>$null
+          gh release view light-journey-v1.0.1 --repo $env:GITHUB_REPOSITORY 2>$null
           if ($LASTEXITCODE -ne 0) {
-            gh release create light-journey-v1.0.0 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Light Journey Windows 1.0.0" --notes "Ten-level offline Windows x64 portable game. Download and run Light-Journey-Windows.exe. No account or network needed to play. Also includes an offline single HTML version."
+            gh release create light-journey-v1.0.1 --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Light Journey Windows 1.0.1" --notes "Ten-level offline Windows x64 portable game. Download and run Light-Journey-Windows.exe. No account or network needed to play. Also includes an offline single HTML version."
             if ($LASTEXITCODE -ne 0) { throw 'Release creation failed' }
           }
-          gh release upload light-journey-v1.0.0 release/Light-Journey-Windows.exe release/Light-Journey-Offline.html release/SHA256.txt --repo $env:GITHUB_REPOSITORY --clobber
+          gh release upload light-journey-v1.0.1 release/Light-Journey-Windows.exe release/Light-Journey-Offline.html release/SHA256.txt release/audio-test.json --repo $env:GITHUB_REPOSITORY --clobber
           if ($LASTEXITCODE -ne 0) { throw 'Release upload failed' }
