@@ -1,25 +1,25 @@
 import { Suspense, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Physics } from "@react-three/rapier";
-import { Stars } from "@react-three/drei";
+import { DreamWorld } from "./DreamWorld";
 import { Arena } from "./Arena";
 import { Bodies, PlayerBall, TargetBall } from "./Balls";
+import { Bombs } from "./Bombs";
 import { Effects } from "./Effects";
-import { CONFIG, holeAt, randomBall } from "../game/config";
+import { CONFIG, holeAt } from "../game/config";
 import { useGame, type Resolution } from "../game/store";
 import { useInput } from "../game/input";
 import * as THREE from "three";
 function Systems() {
-  const registry = useMemo(() => ({ player: null, targets: new Map() }), []);
+  const registry = useMemo(() => ({ player: null, targets: new Map(), session: useGame.getState().session }), []);
   if (import.meta.env.DEV) {
     Object.assign(window, { __orbitBodies: registry, __orbitGame: useGame });
   }
   const balls = useGame((s) => s.balls);
   const status = useGame((s) => s.status);
-  const nextSpawn = useRef(3);
-  const counter = useRef(0);
   const falling = useRef(0);
   const processed = useRef(new Set<string>());
+  const entered = useRef(new Map<string, NonNullable<ReturnType<typeof holeAt>>>());
   useFrame((_, delta) => {
     const dt = Math.min(delta, 0.05);
     const s = useGame.getState();
@@ -40,29 +40,18 @@ function Systems() {
     registry.targets.forEach((rb, id) => {
       if (processed.current.has(id)) return;
       const t = rb.translation();
+      if (t.y < 0 && !entered.current.has(id)) {
+        const hole = holeAt(t.x, t.z);
+        if (hole) entered.current.set(id, hole);
+      }
       if (t.y < -0.7) {
         processed.current.add(id);
-        const h = holeAt(t.x, t.z);
+        const h = entered.current.get(id) ?? holeAt(t.x, t.z);
         rows.push({ id, holeColor: h?.color, x: h?.x ?? t.x, z: h?.z ?? t.z });
       }
     });
     if (rows.length) s.resolve(rows);
-    const latest = useGame.getState();
-    if (
-      latest.level === 2 &&
-      latest.status === "playing" &&
-      latest.elapsed >= nextSpawn.current
-    ) {
-      if (latest.balls.length < CONFIG.maxBalls) {
-        latest.spawn(randomBall(`rain-${++counter.current}`));
-        nextSpawn.current =
-          latest.elapsed +
-          Math.max(
-            CONFIG.spawnMinimum,
-            CONFIG.spawnInitial - latest.elapsed * 0.018,
-          );
-      } else nextSpawn.current = latest.elapsed + 0.25;
-    }
+
   });
   return (
     <Bodies.Provider value={registry}>
@@ -74,6 +63,7 @@ function Systems() {
       >
         <Arena />
         <PlayerBall />
+        <Bombs />
         {balls.map((b) => (
           <TargetBall key={b.id} data={b} />
         ))}
@@ -109,13 +99,12 @@ export function Game() {
       camera={{ position: [0, 20, 20.5], fov: 43, near: 0.1, far: 180 }}
       gl={{ antialias: true, powerPreference: "high-performance" }}
     >
-      <color attach="background" args={["#0c1426"]} />
-      <fog attach="fog" args={["#0c1426", 45, 95]} />
-      <ambientLight intensity={1.1} />
-      <hemisphereLight args={["#b6dfff", "#344369", 1.1]} />
+      <fog attach="fog" args={["#e4ddea", 30, 85]} />
+      <ambientLight intensity={0.9} />
+      <hemisphereLight args={["#fff4de", "#bdafc5", 1.2]} />
       <directionalLight
         position={[-8, 16, 6]}
-        intensity={2.4}
+        intensity={2.1}
         castShadow
         shadow-mapSize={[1024, 1024]}
         shadow-camera-left={-13}
@@ -123,18 +112,11 @@ export function Game() {
         shadow-camera-top={12}
         shadow-camera-bottom={-12}
         shadow-bias={-0.0003}
+        shadow-radius={4}
       />
-      <pointLight position={[0, 2, -10]} color="#488dff" intensity={25} />
+      <pointLight position={[8, 6, -8]} color="#f6d7b0" intensity={12} />
       <Suspense fallback={null}>
-        <Stars
-          radius={65}
-          depth={25}
-          count={650}
-          factor={2}
-          saturation={0}
-          fade
-          speed={0.12}
-        />
+        <DreamWorld />
         <Systems key={session} />
       </Suspense>
       <CameraRig />

@@ -10,7 +10,7 @@ test("sixteen unique targets; four of every color", () => {
 });
 test("same-frame scoring, deduplication, wrong colors and removal are atomic", () => {
   useGame.getState().start(1);
-  const rows = initialBalls()
+  const rows = useGame.getState().balls
     .slice(0, 3)
     .map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 }));
   useGame
@@ -18,16 +18,16 @@ test("same-frame scoring, deduplication, wrong colors and removal are atomic", (
     .resolve([
       ...rows,
       rows[0],
-      { id: "initial-1-0", holeColor: "red", x: 0, z: 0 },
+      { id: useGame.getState().balls[3].id, holeColor: useGame.getState().balls[3].color === "red" ? "blue" : "red", x: 0, z: 0 },
     ]);
-  assert.equal(useGame.getState().score, 3);
+  assert.equal(useGame.getState().score, 2);
   assert.equal(useGame.getState().balls.length, 12);
   useGame.getState().resolve(rows);
-  assert.equal(useGame.getState().score, 3);
+  assert.equal(useGame.getState().score, 2);
 });
 test("indirect balls require no player attribution; ten scores unlock level two once", () => {
   useGame.getState().start(1);
-  const rows = initialBalls()
+  const rows = useGame.getState().balls
     .slice(0, 11)
     .map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 }));
   useGame.getState().resolve(rows);
@@ -61,7 +61,7 @@ test("player death is once-only and takes precedence over scoring", () => {
   useGame
     .getState()
     .resolve(
-      initialBalls().map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 })),
+      useGame.getState().balls.map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 })),
     );
   assert.equal(useGame.getState().score, 0);
   assert.equal(useGame.getState().status, "falling");
@@ -71,7 +71,7 @@ test("player death is once-only and takes precedence over scoring", () => {
 test("impossible static round fails; rain level caps active targets", () => {
   useGame.getState().start(1);
   useGame.getState().resolve(
-    initialBalls()
+    useGame.getState().balls
       .slice(0, 7)
       .map((b) => ({ id: b.id, x: 0, z: 0 })),
   );
@@ -91,13 +91,13 @@ test("rain positions avoid real openings", () => {
 test("second stage wins at twenty and stops spawning", () => {
   useGame.setState({ unlocked: true });
   useGame.getState().start(2);
-  for (let i = 0; i < 4; i++) useGame.getState().spawn(randomBall("win-" + i));
+
   const rows = useGame
     .getState()
-    .balls.map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 }));
+    .balls.slice(0, 20).map((b) => ({ id: b.id, holeColor: b.color, x: 0, z: 0 }));
   useGame.getState().resolve(rows);
   assert.equal(useGame.getState().score, 20);
   assert.equal(useGame.getState().status, "victory");
   useGame.getState().spawn(randomBall("late"));
-  assert.equal(useGame.getState().balls.length, 0);
+  assert.equal(useGame.getState().balls.length, 12);
 });
